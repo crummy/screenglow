@@ -13,3 +13,6 @@
 
 
 // TODO: reference additional headers your program requires here
+
+#define _WIN32_WINNT 0x0600
+#define _WIN32_IE 0x0700

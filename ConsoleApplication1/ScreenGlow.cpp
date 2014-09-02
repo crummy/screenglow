@@ -3,12 +3,15 @@
 
 #include "stdafx.h"
 #include "Hue.h"
+#include "resource.h"
+#include "Settings.h"
 #include <iostream>
 #include <fstream>
 #include <windows.h>
 
 HANDLE gDoneEvent;
 Hue *hue;
+Settings *settings;
 
 using namespace std;
 
@@ -99,6 +102,38 @@ HANDLE setUpWait(int milliseconds) {
     WaitForSingleObject(gDoneEvent, INFINITE);
     CloseHandle(gDoneEvent);
     return hTimerQueue;
+}
+
+BOOL CALLBACK AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+    case WM_INITDIALOG: {
+        HWND hWnd = GetDlgItem(hDlg, ID_LIGHTID);
+        string lightId = settings->getLightId();
+        wstring wLightId = wstring(lightId.begin(), lightId.end());
+        SetWindowText(hWnd, wLightId.c_str());
+        return 1;
+        break;
+    }
+    case WM_COMMAND:
+        switch (wParam) {
+        case ID_OK:
+            return 0;
+        case ID_CANCEL:
+            EndDialog(hDlg, 0);
+            break;
+        case ID_TESTBUTTON:
+            HWND hWnd = GetDlgItem(hDlg, ID_TESTRESULT);
+            SetWindowText(hWnd, _T("test clicked"));
+            break;
+        }
+    }
+    return 0;
+}
+
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    settings = new Settings();
+    DialogBoxParam(hInstance, (LPCTSTR)IDD_DIALOG1, 0, AppDlgProc, 0);
+    return 0;
 }
 
 int main() {
