@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <windows.h>
+#include <CommCtrl.h>
 
 HANDLE gDoneEvent;
 Hue *hue;
@@ -107,10 +108,36 @@ HANDLE setUpWait(int milliseconds) {
 BOOL CALLBACK AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_INITDIALOG: {
-        HWND hWnd = GetDlgItem(hDlg, ID_LIGHTID);
+        HWND lighthWnd = GetDlgItem(hDlg, ID_LIGHTID);
         string lightId = settings->getLightId();
         wstring wLightId = wstring(lightId.begin(), lightId.end());
-        SetWindowText(hWnd, wLightId.c_str());
+        SetWindowText(lighthWnd, wLightId.c_str());
+
+        HWND iphWnd = GetDlgItem(hDlg, ID_IPADDRESS);
+        string ipAddress = settings->getIPAddress();
+        wstring wIpAddress = wstring(ipAddress.begin(), ipAddress.end());
+        SetWindowText(iphWnd, wIpAddress.c_str());
+
+        HWND brightnessSliderhWnd = GetDlgItem(hDlg, ID_BRIGHTNESSSLIDER);
+        SendMessage(brightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0,255));
+        int brightnessMinimum = (float)settings->getBrightnessMinimum();
+        SendMessage(brightnessSliderhWnd, TBM_SETPOS, (WPARAM)brightnessMinimum, (LPARAM)MAKELONG(brightnessMinimum, 0));
+
+        HWND brightnessTexthWnd = GetDlgItem(hDlg, ID_BRIGHTNESSTEXT);
+        string brightnessMinimumString = to_string(brightnessMinimum);
+        wstring wBrightnessMinimumString = wstring(brightnessMinimumString.begin(), brightnessMinimumString.end());
+        SetWindowText(brightnessTexthWnd, wBrightnessMinimumString.c_str());
+
+        HWND captureSliderhWnd = GetDlgItem(hDlg, ID_CAPTURESLIDER);
+        SendMessage(captureSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(30, 3000));
+        int captureInterval = (float)settings->getCaptureIntervalMs();
+        SendMessage(captureSliderhWnd, TBM_SETPOS, (WPARAM)captureInterval, (LPARAM)MAKELONG(captureInterval, 0));
+
+        HWND captureTexthWnd = GetDlgItem(hDlg, ID_CAPTURETEXT);
+        string captureIntervalString = to_string(captureInterval);
+        wstring wCaptureIntervalString = wstring(captureIntervalString.begin(), captureIntervalString.end());
+        SetWindowText(captureTexthWnd, wCaptureIntervalString.c_str());
+
         return 1;
         break;
     }
@@ -121,9 +148,42 @@ BOOL CALLBACK AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case ID_CANCEL:
             EndDialog(hDlg, 0);
             break;
-        case ID_TESTBUTTON:
+        case ID_TESTBUTTON: {
             HWND hWnd = GetDlgItem(hDlg, ID_TESTRESULT);
             SetWindowText(hWnd, _T("test clicked"));
+            break;
+        }
+        case EN_CHANGE:
+            HWND hWnd = (HWND)lParam;
+            if (hWnd == GetDlgItem(hDlg, ID_BRIGHTNESSTEXT)) {
+                string newBrightnessMinimumString;
+                newBrightnessMinimumString.resize(GetWindowTextLength(hWnd) + 1, '\0');
+                GetWindowText(hWnd, LPWSTR(newBrightnessMinimumString.c_str()), 8);
+                int newBrightnessMinimum = atoi(newBrightnessMinimumString.c_str());
+                HWND brightnessSliderhWnd = GetDlgItem(hDlg, ID_BRIGHTNESSSLIDER);
+                SendMessage(brightnessSliderhWnd, TBM_SETPOS, (WPARAM)newBrightnessMinimum, (LPARAM)MAKELONG(newBrightnessMinimum, 0));
+            }
+            break;
+        }
+    case WM_HSCROLL:
+        switch (LOWORD(wParam)) {
+        case TB_THUMBTRACK:
+        case TB_ENDTRACK:
+            HWND sliderhWnd = (HWND)lParam;
+            if (sliderhWnd == GetDlgItem(hDlg, ID_BRIGHTNESSSLIDER)) {
+                int newBrightnessMinimum = SendMessage(sliderhWnd, TBM_GETPOS, 0, 0);
+                string newBrightnessMinimumString = to_string(newBrightnessMinimum);
+                wstring wNewBrightnessMinimumString = wstring(newBrightnessMinimumString.begin(), newBrightnessMinimumString.end());
+                HWND texthWnd = GetDlgItem(hDlg, ID_BRIGHTNESSTEXT);
+                SetWindowText(texthWnd, wNewBrightnessMinimumString.c_str());
+            }
+            else if (sliderhWnd == GetDlgItem(hDlg, ID_CAPTURESLIDER)) {
+                int newCaptureInterval = SendMessage(sliderhWnd, TBM_GETPOS, 0, 0);
+                string newCaptureIntervalString = to_string(newCaptureInterval);
+                wstring wNewCaptureIntervalString = wstring(newCaptureIntervalString.begin(), newCaptureIntervalString.end());
+                HWND texthWnd = GetDlgItem(hDlg, ID_CAPTURETEXT);
+                SetWindowText(texthWnd, wNewCaptureIntervalString.c_str());
+            }
             break;
         }
     }
