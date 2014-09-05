@@ -82,6 +82,6 @@ void Settings::loadDefaults() {
     settings["brightnessMinimum"] = "25";
     settings["captureIntervalMs"] = "1000";
     settings["ipAddress"] = "192.168.1.42";
-    settings["lightId"] = "2";
+    settings["lightId"] = "3";
     settings["colourBucketSize"] = "8";
 }
