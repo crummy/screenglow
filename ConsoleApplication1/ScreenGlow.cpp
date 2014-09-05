@@ -6,6 +6,7 @@
 #include "resource.h"
 #include "Settings.h"
 #include "SettingsWindow.h"
+#include "TaskbarIcon.h"
 #include "ScreenColourCapture.h"
 #include <iostream>
 #include <fstream>
@@ -46,50 +47,26 @@ HANDLE setUpWait(int milliseconds) {
     return hTimerQueue;
 }
 
-// thank you http://www.codeproject.com/Articles/4768/Basic-use-of-Shell-NotifyIcon-in-Win
-void addTaskbarIcon(HINSTANCE hInstance) {
-    NOTIFYICONDATA niData;
-    ZeroMemory(&niData, sizeof(NOTIFYICONDATA));
-    niData.cbSize = sizeof(NOTIFYICONDATA);
-    niData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
-    niData.hIcon = (HICON)LoadImage(hInstance,
-        MAKEINTRESOURCE(IDI_ICON),
-        IMAGE_ICON,
-        GetSystemMetrics(SM_CXSMICON),
-        GetSystemMetrics(SM_CYSMICON),
-        LR_DEFAULTCOLOR);
-    Shell_NotifyIcon(NIM_ADD, &niData);
-
-}
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     settings = new Settings();
     screenCapture = new ScreenColourCapture();
-    addTaskbarIcon(hInstance);
 
     string hubIPAddress = settings->getIPAddress();
     hue = new Hue(hubIPAddress);
     string lightID = settings->getLightId();
     hue->selectLight(lightID);
     HANDLE timerQueue = setUpWait(1000);
+    TaskbarIcon *taskbarIcon = new TaskbarIcon();
+    taskbarIcon->show(hInstance);
 
-    SettingsWindow *settingsWindow = new SettingsWindow(settings);
-    settingsWindow->show(hInstance);
-    //DeleteTimerQueue(timerQueue);
-    return 0;
-}
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
 
-int main() {
-    cout << "Establishing connection with Hue hub." << endl;
-    hue = new Hue("192.168.1.42");
-    cout << "Selecting light." << endl;
-    if (hue->selectLight("3") == 0) {
-        cout << "Successfully selected light." << endl;
-    }
-    HANDLE timerQueue = setUpWait(1000);
-    while (true) {
-        Sleep(0);
-    }
+    //SettingsWindow *settingsWindow = new SettingsWindow(settings);
+    //settingsWindow->show(hInstance);
     DeleteTimerQueue(timerQueue);
-    return 0;
+    return (int)msg.wParam;
 }

@@ -19,7 +19,7 @@ void SettingsWindow::show(HINSTANCE hInstance) {
 
 // A hack to allow putting AppDlgProc in a class.
 // http://stackoverflow.com/questions/25678892/calling-a-win32-api-and-giving-a-callback-to-a-class-function
-BOOL CALLBACK SettingsWindow::StaticAppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+INT_PTR CALLBACK SettingsWindow::StaticAppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     if (uMsg == WM_INITDIALOG) {
         SetProp(hDlg, L"Settings Window", (HANDLE)lParam);
     }
@@ -30,7 +30,7 @@ BOOL CALLBACK SettingsWindow::StaticAppDlgProc(HWND hDlg, UINT uMsg, WPARAM wPar
     return pThis ? pThis->AppDlgProc(hDlg, uMsg, wParam, lParam) : FALSE;
 }
 
-BOOL CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_INITDIALOG: {
                             HWND lighthWnd = GetDlgItem(hDlg, IDC_LIGHTID);

@@ -1,16 +1,17 @@
 #pragma once
 
-#include "Settings.h"
 #include <Windows.h>
 
-class SettingsWindow
+class TaskbarIcon
 {
 public:
-    SettingsWindow(Settings *settings);
-    ~SettingsWindow();
+    TaskbarIcon();
+    ~TaskbarIcon();
     void show(HINSTANCE hInstance);
 private:
-    Settings *settings;
+    HINSTANCE hInstance;
+    void ShowContextMenu(HWND hWnd);
+    BOOL OnInitDialog(HWND hWnd);
     static INT_PTR CALLBACK StaticAppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     INT_PTR CALLBACK AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 };
