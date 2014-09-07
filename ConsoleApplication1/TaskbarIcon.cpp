@@ -6,8 +6,11 @@
 #define WM_RIGHTCLICKMENUMSG (WM_USER + 1)
 
 
-TaskbarIcon::TaskbarIcon()
+TaskbarIcon::TaskbarIcon(TaskbarCallback settingsCallback, TaskbarCallback aboutCallback, TaskbarCallback quitCallback)
 {
+    openSettingsWindow = settingsCallback;
+    openAboutWindow = aboutCallback;
+    quitApp = quitCallback;
 }
 
 
@@ -19,9 +22,8 @@ TaskbarIcon::~TaskbarIcon()
 void TaskbarIcon::show(HINSTANCE hInstance) {
     this->hInstance = hInstance;
 
-    HWND hWnd = CreateDialogParam(hInstance, MAKEINTRESOURCE(IDD_SETTINGS), NULL, TaskbarIcon::StaticAppDlgProc, (LPARAM)this);
+    HWND hWnd = CreateDialogParam(hInstance, MAKEINTRESOURCE(IDD_EMPTY), NULL, TaskbarIcon::StaticAppDlgProc, (LPARAM)this);
 
-    NOTIFYICONDATA niData;
     ZeroMemory(&niData, sizeof(NOTIFYICONDATA));
     niData.cbSize = sizeof(NOTIFYICONDATA);
     niData.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
@@ -32,7 +34,7 @@ void TaskbarIcon::show(HINSTANCE hInstance) {
         GetSystemMetrics(SM_CYSMICON),
         LR_DEFAULTCOLOR);
     niData.hWnd = hWnd;
-    niData.uCallbackMessage = WM_RIGHTCLICKMENUMSG; // TODO: Change this to something like SWM_TRAYMSG
+    niData.uCallbackMessage = WM_RIGHTCLICKMENUMSG;
     lstrcpyn(niData.szTip, _T("ScreenGlow is now running"), sizeof(niData.szTip) / sizeof(TCHAR));
     Shell_NotifyIcon(NIM_ADD, &niData);
     if (niData.hIcon && DestroyIcon(niData.hIcon)) {
@@ -106,17 +108,25 @@ INT_PTR CALLBACK TaskbarIcon::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
         wmEvent = HIWORD(wParam);
         switch (wmId) {
         case ID_ABOUT:
+            (*openAboutWindow)();
+            break;
         case ID_SETTINGS:
+            (*openSettingsWindow)();
+            break;
         case ID_EXIT:
+            (*quitApp)();
+            DestroyWindow(hDlg);
             break;
         }
     case WM_INITDIALOG:
-        return OnInitDialog(hDlg);
+        //return OnInitDialog(hDlg);
+        break;
     case WM_CLOSE:
         DestroyWindow(hDlg);
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
+        Shell_NotifyIcon(NIM_DELETE, &niData);
         break;
     }
     return DefWindowProc(hDlg, uMsg, wParam, lParam);

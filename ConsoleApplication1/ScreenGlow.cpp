@@ -6,6 +6,7 @@
 #include "resource.h"
 #include "Settings.h"
 #include "SettingsWindow.h"
+#include "AboutWindow.h"
 #include "TaskbarIcon.h"
 #include "ScreenColourCapture.h"
 #include <iostream>
@@ -16,9 +17,9 @@ HANDLE gDoneEvent;
 Hue *hue;
 Settings *settings;
 ScreenColourCapture *screenCapture;
+HINSTANCE hInst;
 
 using namespace std;
-
 
 VOID CALLBACK TimerRoutine(PVOID lpParam, BOOLEAN TimerOrWaitFired)
 {
@@ -47,16 +48,32 @@ HANDLE setUpWait(int milliseconds) {
     return hTimerQueue;
 }
 
+
+void openSettingsWindow() {
+    SettingsWindow *settingsWindow = new SettingsWindow(settings);
+    settingsWindow->show(hInst);
+}
+
+void openAboutWindow() {
+    AboutWindow *aboutWindow = new AboutWindow();
+    aboutWindow->show(hInst);
+}
+
+void quitApp() {
+    // if necessary, turn off light
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     settings = new Settings();
     screenCapture = new ScreenColourCapture();
+    hInst = hInstance;
 
     string hubIPAddress = settings->getIPAddress();
     hue = new Hue(hubIPAddress);
     string lightID = settings->getLightId();
     hue->selectLight(lightID);
     HANDLE timerQueue = setUpWait(1000);
-    TaskbarIcon *taskbarIcon = new TaskbarIcon();
+    TaskbarIcon *taskbarIcon = new TaskbarIcon(openSettingsWindow, openAboutWindow, quitApp);
     taskbarIcon->show(hInstance);
 
     MSG msg;
@@ -65,8 +82,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         DispatchMessage(&msg);
     }
 
-    //SettingsWindow *settingsWindow = new SettingsWindow(settings);
-    //settingsWindow->show(hInstance);
+
     DeleteTimerQueue(timerQueue);
     return (int)msg.wParam;
 }

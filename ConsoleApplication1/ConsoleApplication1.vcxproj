@@ -83,6 +83,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AboutWindow.h" />
     <ClInclude Include="Hue.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ScreenColourCapture.h" />
@@ -93,6 +94,7 @@
     <ClInclude Include="TaskbarIcon.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AboutWindow.cpp" />
     <ClCompile Include="ScreenColourCapture.cpp" />
     <ClCompile Include="ScreenGlow.cpp" />
     <ClCompile Include="Hue.cpp" />
