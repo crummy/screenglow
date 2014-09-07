@@ -112,5 +112,5 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
             break;
         }
     }
-    return 0;
+    return DefWindowProc(hDlg, uMsg, wParam, lParam);
 }

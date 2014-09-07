@@ -61,6 +61,7 @@ void openAboutWindow() {
 
 void quitApp() {
     // if necessary, turn off light
+    // hue->turnofflight()
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {

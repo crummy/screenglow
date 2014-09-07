@@ -30,5 +30,18 @@ INT_PTR CALLBACK AboutWindow::StaticAppDlgProc(HWND hDlg, UINT uMsg, WPARAM wPar
 }
 
 INT_PTR CALLBACK AboutWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    return 0;
+    switch (uMsg) {
+    case WM_COMMAND:
+        switch (wParam) {
+        case IDC_OK:
+            DestroyWindow(hDlg);
+        }
+    case WM_CLOSE:
+        DestroyWindow(hDlg);
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    }
+    return DefWindowProc(hDlg, uMsg, wParam, lParam);
 }

@@ -51,7 +51,7 @@ void TaskbarIcon::ShowContextMenu(HWND hWnd) {
         InsertMenu(hMenu, -1, MF_BYPOSITION | MF_STRING, ID_SETTINGS, _T("Settings"));
         InsertMenu(hMenu, -1, MF_BYPOSITION | MF_STRING, ID_ABOUT, _T("About"));
         InsertMenu(hMenu, -1, MF_BYPOSITION | MF_STRING, ID_EXIT, _T("Exit"));
-        SetForegroundWindow(hWnd);
+        //SetForegroundWindow(hWnd);
         TrackPopupMenu(hMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL);
         DestroyMenu(hMenu);
     }
@@ -119,7 +119,7 @@ INT_PTR CALLBACK TaskbarIcon::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
             break;
         }
     case WM_INITDIALOG:
-        //return OnInitDialog(hDlg);
+        //return OnInitDialog(hDlg); // TODO: why is this not needed?
         break;
     case WM_CLOSE:
         DestroyWindow(hDlg);
