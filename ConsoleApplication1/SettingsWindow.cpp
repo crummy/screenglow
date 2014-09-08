@@ -33,45 +33,19 @@ INT_PTR CALLBACK SettingsWindow::StaticAppDlgProc(HWND hDlg, UINT uMsg, WPARAM w
 INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_INITDIALOG: {
-                            HWND lighthWnd = GetDlgItem(hDlg, IDC_LIGHTID);
-                            string lightId = settings->getLightId();
-                            wstring wLightId = wstring(lightId.begin(), lightId.end());
-                            SetWindowText(lighthWnd, wLightId.c_str());
+        // Load all the defaults for all UI elements from settings
+        populateUIFromSettings(hDlg);
 
-                            HWND iphWnd = GetDlgItem(hDlg, IDC_IPADDRESS);
-                            string ipAddress = settings->getIPAddress();
-                            wstring wIpAddress = wstring(ipAddress.begin(), ipAddress.end());
-                            SetWindowText(iphWnd, wIpAddress.c_str());
-
-                            HWND brightnessSliderhWnd = GetDlgItem(hDlg, IDC_MINBRIGHTNESSSLIDER);
-                            SendMessage(brightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0, 255));
-                            int brightnessMinimum = (int)settings->getBrightnessMinimum();
-                            SendMessage(brightnessSliderhWnd, TBM_SETPOS, (WPARAM)brightnessMinimum, (LPARAM)MAKELONG(brightnessMinimum, 0));
-
-                            HWND brightnessTexthWnd = GetDlgItem(hDlg, IDC_MINBRIGHTNESSTEXT);
-                            string brightnessMinimumString = to_string(brightnessMinimum);
-                            wstring wBrightnessMinimumString = wstring(brightnessMinimumString.begin(), brightnessMinimumString.end());
-                            SetWindowText(brightnessTexthWnd, wBrightnessMinimumString.c_str());
-
-                            HWND captureSliderhWnd = GetDlgItem(hDlg, IDC_CAPTURESLIDER);
-                            SendMessage(captureSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(30, 3000));
-                            int captureInterval = (int)settings->getCaptureIntervalMs();
-                            SendMessage(captureSliderhWnd, TBM_SETPOS, (WPARAM)captureInterval, (LPARAM)MAKELONG(captureInterval, 0));
-
-                            HWND captureTexthWnd = GetDlgItem(hDlg, IDC_CAPTURETEXT);
-                            string captureIntervalString = to_string(captureInterval);
-                            wstring wCaptureIntervalString = wstring(captureIntervalString.begin(), captureIntervalString.end());
-                            SetWindowText(captureTexthWnd, wCaptureIntervalString.c_str());
-
-                            return 1;
-                            break;
+        break;
     }
     case WM_COMMAND:
         switch (wParam) {
         case IDC_OK:
+            // if there are changes, save them and restart
+            DestroyWindow(hDlg);
             return 0;
         case IDC_CANCEL:
-            EndDialog(hDlg, 0);
+            DestroyWindow(hDlg);
             break;
         case IDC_TESTBUTTON: {
                                  HWND hWnd = GetDlgItem(hDlg, IDC_TESTTEXT);
@@ -113,4 +87,44 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
         }
     }
     return DefWindowProc(hDlg, uMsg, wParam, lParam);
+}
+
+void SettingsWindow::populateUIFromSettings(HWND hWnd) {
+    /*HWND lighthWnd = GetDlgItem(hWnd, IDC_LIGHTID);
+    TCHAR* lightId = settings->getLightId();
+    SetWindowText(lighthWnd, lightId);
+
+    HWND iphWnd = GetDlgItem(hWnd, IDC_IPADDRESS);
+    TCHAR* ipAddress = settings->getIPAddress();
+    SetWindowText(iphWnd, ipAddress);
+
+    HWND brightnessSliderhWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSSLIDER);
+    SendMessage(brightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0, 255));
+    int brightnessMinimum = (int)settings->getBrightnessMinimum();
+    SendMessage(brightnessSliderhWnd, TBM_SETPOS, (WPARAM)brightnessMinimum, (LPARAM)MAKELONG(brightnessMinimum, 0));
+    */
+    int brightnessMinimum = settings->getBrightnessMinimum();
+
+    HWND brightnessTexthWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSTEXT);
+    TCHAR brightnessMinimumString[16];
+    _stprintf_s(brightnessMinimumString, sizeof(brightnessMinimumString), _T("%d"), brightnessMinimum);
+    SetWindowText(brightnessTexthWnd, brightnessMinimumString);
+    /*
+    HWND captureSliderhWnd = GetDlgItem(hWnd, IDC_CAPTURESLIDER);
+    SendMessage(captureSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(30, 3000));
+    int captureInterval = (int)settings->getCaptureIntervalMs();
+    SendMessage(captureSliderhWnd, TBM_SETPOS, (WPARAM)captureInterval, (LPARAM)MAKELONG(captureInterval, 0));
+
+    HWND captureTexthWnd = GetDlgItem(hWnd, IDC_CAPTURETEXT);
+    TCHAR captureIntervalString[16];
+    _stprintf_s(captureIntervalString, _T("%d"), captureInterval);
+    SetWindowText(captureTexthWnd, captureIntervalString);*/
+}
+
+void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
+    //TCHAR IPAddress[256];
+    //GetWindowText(GetDlgItem(hDlg, IDC_IPADDRESS), &IPAddress[0], IPAddress.size());
+    //string oldIPAddress = settings->getIPAddress();
+    //wstring oldIPAddress = _T(settings->getIPAddress());
+
 }

@@ -39,9 +39,6 @@ INT_PTR CALLBACK AboutWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
     case WM_CLOSE:
         DestroyWindow(hDlg);
         break;
-    case WM_DESTROY:
-        PostQuitMessage(0);
-        break;
     }
     return DefWindowProc(hDlg, uMsg, wParam, lParam);
 }

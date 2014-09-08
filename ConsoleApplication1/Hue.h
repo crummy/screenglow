@@ -21,13 +21,13 @@ public:
     int changeColourTo(COLORREF colour);
     ~Hue();
 private:
-    Point Hue::convertColourToXY(COLORREF colour);
-    int Hue::convertColourToBrightness(COLORREF colour);
-    bool Hue::checkPointInLampsReach(Point p, Point *colorPoints);
-    float Hue::getDistanceBetweenTwoPoints(Point one, Point two);
-    Point Hue::getClosestPointToPoints(Point A, Point B, Point P);
-    float Hue::crossProduct(Point one, Point two);
-    int Hue::sendMessage(string URL, string message, string &returned_data);
+    Point convertColourToXY(COLORREF colour);
+    int convertColourToBrightness(COLORREF colour);
+    bool checkPointInLampsReach(Point p, Point *colorPoints);
+    float getDistanceBetweenTwoPoints(Point one, Point two);
+    Point getClosestPointToPoints(Point A, Point B, Point P);
+    float crossProduct(Point one, Point two);
+    int sendMessage(string URL, string message, string &returned_data);
     string ip;
     string username;
     string light_id;

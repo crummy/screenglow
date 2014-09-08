@@ -62,6 +62,14 @@ void openAboutWindow() {
 void quitApp() {
     // if necessary, turn off light
     // hue->turnofflight()
+    settings->saveSettings();
+}
+
+// from http://vajris.wordpress.com/2012/10/15/conversion-tchar-wstring-string-string/
+string TCHARtoString(TCHAR* tchar) {
+    wstring w(&tchar[0]);
+    string s(w.begin(), w.end());
+    return s;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
@@ -69,9 +77,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     screenCapture = new ScreenColourCapture();
     hInst = hInstance;
 
-    string hubIPAddress = settings->getIPAddress();
+    string hubIPAddress = TCHARtoString(settings->getIPAddress());
     hue = new Hue(hubIPAddress);
-    string lightID = settings->getLightId();
+    string lightID = TCHARtoString(settings->getLightId());
     hue->selectLight(lightID);
     HANDLE timerQueue = setUpWait(1000);
     TaskbarIcon *taskbarIcon = new TaskbarIcon(openSettingsWindow, openAboutWindow, quitApp);

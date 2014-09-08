@@ -10,16 +10,16 @@ public:
     Settings();
     Settings(string filename);
     ~Settings();
-    string getAverageColourMethod();
+    int getAverageColourMethod();
     bool isBrightnessEnabled();
-    float getBrightnessMinimum();
+    int getBrightnessMinimum();
     int getCaptureIntervalMs();
-    string getIPAddress();
-    string getLightId();
+    TCHAR* getIPAddress();
+    TCHAR* getLightId();
     int getColourBucketSize();
     int saveSettings();
 private:
-    map<string, string> settings;
+    map<string, TCHAR*> settings;
     const string filename = "ScreenGlow_Settings.txt";
     void loadDefaults();
 };
