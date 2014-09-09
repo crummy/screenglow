@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Settings.h"
+#include <atlstr.h>
 
 #include <fstream>
 #include <iostream>
@@ -17,9 +18,8 @@ Settings::Settings() {
             int delimiterPosition = line.find(delimiter);
             settingKey = line.substr(0, delimiterPosition);
             settingValue = line.substr(delimiterPosition + 1);
-            wstring wSettingValue = wstring(settingValue.begin(), settingValue.end());
             settingValueTCHAR = new TCHAR[settingValue.size() + 1];
-            memcpy_s(settingValueTCHAR, settingValue.size() + 1, wSettingValue.c_str(), settingValue.size() + 1);
+            _tcscpy_s(settingValueTCHAR, settingValue.size() * sizeof(TCHAR), CA2T(settingValue.c_str()));
             settings[settingKey] = settingValueTCHAR;
         }
     } else {

@@ -90,7 +90,7 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 }
 
 void SettingsWindow::populateUIFromSettings(HWND hWnd) {
-    /*HWND lighthWnd = GetDlgItem(hWnd, IDC_LIGHTID);
+    HWND lighthWnd = GetDlgItem(hWnd, IDC_LIGHTID);
     TCHAR* lightId = settings->getLightId();
     SetWindowText(lighthWnd, lightId);
 
@@ -102,14 +102,12 @@ void SettingsWindow::populateUIFromSettings(HWND hWnd) {
     SendMessage(brightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0, 255));
     int brightnessMinimum = (int)settings->getBrightnessMinimum();
     SendMessage(brightnessSliderhWnd, TBM_SETPOS, (WPARAM)brightnessMinimum, (LPARAM)MAKELONG(brightnessMinimum, 0));
-    */
-    int brightnessMinimum = settings->getBrightnessMinimum();
 
     HWND brightnessTexthWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSTEXT);
     TCHAR brightnessMinimumString[16];
-    _stprintf_s(brightnessMinimumString, sizeof(brightnessMinimumString), _T("%d"), brightnessMinimum);
+    _stprintf_s(brightnessMinimumString, 16, _T("%d"), brightnessMinimum);
     SetWindowText(brightnessTexthWnd, brightnessMinimumString);
-    /*
+    
     HWND captureSliderhWnd = GetDlgItem(hWnd, IDC_CAPTURESLIDER);
     SendMessage(captureSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(30, 3000));
     int captureInterval = (int)settings->getCaptureIntervalMs();
@@ -118,7 +116,7 @@ void SettingsWindow::populateUIFromSettings(HWND hWnd) {
     HWND captureTexthWnd = GetDlgItem(hWnd, IDC_CAPTURETEXT);
     TCHAR captureIntervalString[16];
     _stprintf_s(captureIntervalString, _T("%d"), captureInterval);
-    SetWindowText(captureTexthWnd, captureIntervalString);*/
+    SetWindowText(captureTexthWnd, captureIntervalString);
 }
 
 void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
