@@ -5,33 +5,10 @@
 #include <regex>
 
 
-// Called if no username is present.
-Hue::Hue(string ip) {
-    username = "3f2dd9203b30ea0f320f55702a65b9ff";
+Hue::Hue(string ip, string lightID, string username) {
     this->ip = ip;
-    this->light_id = light_id;
-    //while (registerApp() != 0) {
-    //    cout << "Failed to register app. Please press the link button on the Hue hub." << endl;
-    //    system("PAUSE");
-    //}
-    debug = false;
-}
-
-// Sets internal light id, and attempts to turn it on. Returns 0 upon success.
-// May take a name instead of an id, not yet sure.
-int Hue::selectLight(string id) {
-    int success = 0;
-    this->light_id = id;
-    string returned_data;
-    const string URL = "http://" + ip + "/api/" + username + "/lights/" + light_id + "/state";
-    const string body = "{ \"on\": true }";
-    success = sendMessage(URL, body, returned_data);
-    if (returned_data.find("success") == string::npos) {
-        success = -1;
-        cout << "selectLight failed. Sent data: " << endl << body << endl;
-        cout << "Returned data : " << endl << returned_data << endl;
-    }
-    return success;
+    this->lightID = lightID;
+    this->username = username;
 }
 
 // The CURL library will call this with data returned from HTTP requests. We put it at a memory address
@@ -51,7 +28,7 @@ int WriteMemoryCallback(void *ptr, size_t size, size_t nmemb, void *data) {
 // Accepts the URL to the requested API, the actual data to be sent, and the address of a string
 // which will be populated with JSON response on return.
 // Returns 0 on success.
-int Hue::sendMessage(string URL, string message, string &returned_data) {
+int Hue::sendMessage(string URL, string message, string method, string &returned_data) {
     int success = 0;
     CURL *curl = curl_easy_init();
     if (curl) {
@@ -62,10 +39,11 @@ int Hue::sendMessage(string URL, string message, string &returned_data) {
         headers = curl_slist_append(headers, "charsets: utf-8");
 
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "PUT");
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, message.c_str());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, message.length());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+        curl_easy_setopt(curl, CURLOPT_FAILONERROR, true);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
         curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
         //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -73,7 +51,7 @@ int Hue::sendMessage(string URL, string message, string &returned_data) {
         CURLcode res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
             cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
-            success = -1;
+            success = (int)res;
         } else {
             returned_data = data.str();
         }
@@ -86,34 +64,60 @@ int Hue::sendMessage(string URL, string message, string &returned_data) {
     return success;
 }
 
-// Registers app, sets a username. Returns 0 on success
-int Hue::registerApp() {
-    int success = 0;
+int Hue::sendMessage(string URL, string message, string &returned_data) {
+    string defaultMethod = "PUT";
+    return sendMessage(URL, message, defaultMethod, returned_data);
+}
 
-    // Set up settings for the Hue API call. The JSON response will be stored in returned_data.
-    string returned_data;
-    const string body = "{\"devicetype\": \"LightSync\"}";
-    const string URL = "http://" + ip + "/api";
-    sendMessage(URL, body, returned_data);
-
-    // Attempt to extract the "username" field from the JSON response with a regex.
-    regex username_regex;
-    try {
-        username_regex = regex("\"success\":\\{\"username\":\"(.*)\"\\}");
-    } catch (const regex_error &e) {
-        cout << "Regex error: " << e.what() << endl;
-        success = -1;
+connectionStatus Hue::testConnection() {
+    string testURL = "http://" + ip + "/api/" + username + "/lights";
+    string testResponse;
+    int testResult = sendMessage(testURL, "", "GET", testResponse);
+    if (testResult == CURLE_HTTP_RETURNED_ERROR) {
+        return connectionBadIP;
     }
-    smatch match;
-    const string s = returned_data;
-    if (regex_search(s.begin(), s.end(), match, username_regex)) {
-        username = match[1];
-    } else {
-        cout << "registerApp failed. Returned data: " << endl << returned_data << endl;
-        success = -1;
+    else if (testResult != 0) {
+        return connectionUnknownError;
     }
-
-    return success;
+    else if (testResponse.find("unauthorized user") != string::npos) {
+        // We need to register a username.
+        string registerURL = "http://" + ip + "/api";
+        string registerBody = "{\"devicetype\": \"ScreenGlow\"}";
+        string registerResponse;
+        int registerResult = sendMessage(registerURL, registerBody, "POST", registerResponse);
+        if (testResponse.find("link button not pressed") != string::npos) {
+            // If the link button was not pressed but needs to be, just quit out. Outside you will handle
+            // prompting them to press the button, and presumably call testConnection() again.
+            return connectionNeedsLink;
+        }
+        else {
+            // Got a response from username registration. Extract and store username.
+            regex username_regex;
+            try {
+                username_regex = regex("\"success\":\\{\"username\":\"(.*)\"\\}");
+            }
+            catch (const regex_error &e) {
+                return connectionUnknownError;
+            }
+            smatch match;
+            const string s = registerResponse;
+            if (regex_search(s.begin(), s.end(), match, username_regex)) {
+                username = match[1];
+            }
+            else {
+                return connectionUnknownError;
+            }
+        }
+    }
+    // At this point we should have a good connection. Check the light ID is correct.
+    string lightCheckURL = "http://" + ip + "/api/" + username + "/lights/" + lightID + "/state";
+    string lightCheckBody = "{\"on\": \"true\", \"sat\" : 255, \"bri\" : 255, \"hue\" : 10000}";
+    string lightCheckResponse;
+    int lightCheckResult = sendMessage(lightCheckURL, lightCheckBody, lightCheckResponse);
+    if (lightCheckResponse.find("not available") != string::npos) {
+        return connectionBadID;
+    }
+    return connectionOK;
 }
 
 // Given a COLORREF, will change light_id to this colour. Returns 0 on success.
@@ -126,21 +130,13 @@ int Hue::changeColourTo(COLORREF colour) {
     x << xy.x;
     y << xy.y;
     string returned_data;
-    const string URL = "http://" + ip + "/api/" + username + "/lights/" + light_id + "/state";
+    const string URL = "http://" + ip + "/api/" + username + "/lights/" + lightID + "/state";
     const string body = "{ \"xy\": [" + x.str() + "," + y.str() + "] }";
     success = sendMessage(URL, body, returned_data);
     if (returned_data.find("success") == string::npos) {
         success = -1;
         cout << "changeColourTo failed. Sent data: " << endl << body << endl;
         cout << "Returned data : " << endl << returned_data << endl;
-    }
-    if (debug) {
-        cout << "Converted colour (" << to_string(GetRValue(colour)) << ",";
-        cout << to_string(GetGValue(colour)) << "," << to_string(GetBValue(colour)) << ")";
-        cout << "to [" << x.str() << "," << y.str() << "]" << endl;
-        cout << "URL: " << URL << endl;
-        cout << "BODY:" << body << endl;
-        cout << "DATA:" << returned_data << endl;
     }
     return success;
 }

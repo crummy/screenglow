@@ -14,7 +14,7 @@
 #include <windows.h>
 
 HANDLE gDoneEvent;
-Hue *hue;
+Hue *hue = NULL;
 Settings *settings;
 ScreenColourCapture *screenCapture;
 HINSTANCE hInst;
@@ -27,7 +27,9 @@ VOID CALLBACK TimerRoutine(PVOID lpParam, BOOLEAN TimerOrWaitFired)
         printf("TimerRoutine lpParam is NULL\n");
     } else {
         COLORREF averageColour = screenCapture->getScreenColour();
-        hue->changeColourTo(averageColour);
+        if (hue != NULL) {
+            hue->changeColourTo(averageColour);
+        }
     }
     SetEvent(gDoneEvent);
 }
@@ -60,9 +62,22 @@ void openAboutWindow() {
 }
 
 void quitApp() {
-    // if necessary, turn off light
+    // if setting is on, turn off light
     // hue->turnofflight()
     settings->saveSettings();
+}
+
+void sleepApp() {
+    // turn off light
+}
+
+void wakeApp() {
+    // turn on light
+}
+
+void newHubConnection(Hue *newHue) {
+    delete hue;
+    hue = newHue;
 }
 
 // from http://vajris.wordpress.com/2012/10/15/conversion-tchar-wstring-string-string/
@@ -77,12 +92,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     screenCapture = new ScreenColourCapture();
     hInst = hInstance;
 
-    string hubIPAddress = TCHARtoString(settings->getIPAddress());
-    hue = new Hue(hubIPAddress);
-    string lightID = TCHARtoString(settings->getLightId());
-    hue->selectLight(lightID);
+    //string hubIPAddress = TCHARtoString(settings->getIPAddress());
+    //hue = new Hue(hubIPAddress);
+    //string lightID = TCHARtoString(settings->getLightId());
+    //hue->selectLight(lightID);
     HANDLE timerQueue = setUpWait(1000);
-    TaskbarIcon *taskbarIcon = new TaskbarIcon(openSettingsWindow, openAboutWindow, quitApp);
+    TaskbarIcon *taskbarIcon = new TaskbarIcon(openSettingsWindow, openAboutWindow, quitApp, sleepApp, wakeApp);
     taskbarIcon->show(hInstance);
 
     MSG msg;
@@ -90,7 +105,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
-
 
     DeleteTimerQueue(timerQueue);
     return (int)msg.wParam;

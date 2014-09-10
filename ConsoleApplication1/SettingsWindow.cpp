@@ -33,25 +33,21 @@ INT_PTR CALLBACK SettingsWindow::StaticAppDlgProc(HWND hDlg, UINT uMsg, WPARAM w
 INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
     case WM_INITDIALOG: {
-        // Load all the defaults for all UI elements from settings
         populateUIFromSettings(hDlg);
-
         break;
     }
     case WM_COMMAND:
         switch (wParam) {
         case IDC_OK:
-            // if there are changes, save them and restart
+            populateSettingsFromUI(hDlg);
             DestroyWindow(hDlg);
             return 0;
         case IDC_CANCEL:
             DestroyWindow(hDlg);
             break;
-        case IDC_TESTBUTTON: {
-                                 HWND hWnd = GetDlgItem(hDlg, IDC_TESTTEXT);
-                                 SetWindowText(hWnd, _T("test clicked"));
-                                 break;
-        }
+        case IDC_TESTBUTTON:
+            populateSettingsFromUI(hDlg);
+            break;
         case EN_CHANGE:
             HWND hWnd = (HWND)lParam;
             if (hWnd == GetDlgItem(hDlg, IDC_MINBRIGHTNESSTEXT)) {
@@ -89,6 +85,7 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
     return DefWindowProc(hDlg, uMsg, wParam, lParam);
 }
 
+// Populates UI elements (text boxes, sliders etc) with data extracted from the Settings object we have.
 void SettingsWindow::populateUIFromSettings(HWND hWnd) {
     HWND lighthWnd = GetDlgItem(hWnd, IDC_LIGHTID);
     TCHAR* lightId = settings->getLightId();
@@ -100,7 +97,7 @@ void SettingsWindow::populateUIFromSettings(HWND hWnd) {
 
     HWND brightnessSliderhWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSSLIDER);
     SendMessage(brightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0, 255));
-    int brightnessMinimum = (int)settings->getBrightnessMinimum();
+    int brightnessMinimum = settings->getBrightnessMinimum();
     SendMessage(brightnessSliderhWnd, TBM_SETPOS, (WPARAM)brightnessMinimum, (LPARAM)MAKELONG(brightnessMinimum, 0));
 
     HWND brightnessTexthWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSTEXT);
@@ -110,7 +107,7 @@ void SettingsWindow::populateUIFromSettings(HWND hWnd) {
     
     HWND captureSliderhWnd = GetDlgItem(hWnd, IDC_CAPTURESLIDER);
     SendMessage(captureSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(30, 3000));
-    int captureInterval = (int)settings->getCaptureIntervalMs();
+    int captureInterval = settings->getCaptureIntervalMs();
     SendMessage(captureSliderhWnd, TBM_SETPOS, (WPARAM)captureInterval, (LPARAM)MAKELONG(captureInterval, 0));
 
     HWND captureTexthWnd = GetDlgItem(hWnd, IDC_CAPTURETEXT);
@@ -119,10 +116,25 @@ void SettingsWindow::populateUIFromSettings(HWND hWnd) {
     SetWindowText(captureTexthWnd, captureIntervalString);
 }
 
+// Takes values from the settings window and inserts them into the settings object.
+// Prefers values from text boxes over sliders, that way users can set values outside of the slider
+// ranges if they wish.
 void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
-    //TCHAR IPAddress[256];
-    //GetWindowText(GetDlgItem(hDlg, IDC_IPADDRESS), &IPAddress[0], IPAddress.size());
-    //string oldIPAddress = settings->getIPAddress();
-    //wstring oldIPAddress = _T(settings->getIPAddress());
-
+    TCHAR IPAddress[256];
+    GetWindowText(GetDlgItem(hDlg, IDC_IPADDRESS), &IPAddress[0], 256);
+    // TODO: Set IP address in settings
+    TCHAR* oldIPAddress = settings->getIPAddress();
+    TCHAR lightID[256];
+    GetWindowText(GetDlgItem(hDlg, IDC_LIGHTID), &lightID[0], 256);
+    // TODO: Set lightID in settings
+    TCHAR* oldLightID = settings->getLightId();
+    if ((_tcscmp(IPAddress, oldIPAddress) != 0) || (_tcscmp(lightID, oldLightID) != 0)) {
+        // If the IP address or light ID have changed, then we need to get a new connection to the Hub.
+    }
+    TCHAR brightnessMinimum[256];
+    GetWindowText(GetDlgItem(hDlg, IDC_MINBRIGHTNESSTEXT), &brightnessMinimum[0], 256);
+    // TODO: Set brightnessMinimum in settings
+    TCHAR captureInterval[256];
+    GetWindowText(GetDlgItem(hDlg, IDC_CAPTURETEXT), &captureInterval[0], 256);
+    // TODO: Set captureInterval in Settings
 }

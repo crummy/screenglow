@@ -6,6 +6,14 @@
 
 using namespace std;
 
+enum connectionStatus {
+    connectionOK,
+    connectionBadIP,
+    connectionBadID,
+    connectionNeedsLink,
+    connectionUnknownError
+};
+
 class Hue
 {
     struct Point {
@@ -15,9 +23,8 @@ class Hue
         float y;
     };
 public:
-    Hue(string ip);
-    int selectLight(string id);
-    int registerApp();
+    Hue(string ip, string lightID, string username);
+    connectionStatus testConnection();
     int changeColourTo(COLORREF colour);
     ~Hue();
 private:
@@ -28,9 +35,9 @@ private:
     Point getClosestPointToPoints(Point A, Point B, Point P);
     float crossProduct(Point one, Point two);
     int sendMessage(string URL, string message, string &returned_data);
+    int sendMessage(string URL, string message, string method, string &returned_data);
     string ip;
     string username;
-    string light_id;
-    bool debug = false;
+    string lightID;
 };
 

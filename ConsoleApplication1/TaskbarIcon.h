@@ -7,7 +7,7 @@ typedef void(*TaskbarCallback)(void);
 class TaskbarIcon
 {
 public:
-    TaskbarIcon(TaskbarCallback settingsCallback, TaskbarCallback aboutCallback, TaskbarCallback quitCallback);
+    TaskbarIcon(TaskbarCallback settingsCallback, TaskbarCallback aboutCallback, TaskbarCallback quitCallback, TaskbarCallback sleepCallback, TaskbarCallback wakeCallback);
     ~TaskbarIcon();
     void show(HINSTANCE hInstance);  
 private:
@@ -20,5 +20,7 @@ private:
     TaskbarCallback openSettingsWindow;
     TaskbarCallback openAboutWindow;
     TaskbarCallback quitApp;
+    TaskbarCallback sleepApp;
+    TaskbarCallback wakeApp;
 };
 

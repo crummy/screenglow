@@ -6,7 +6,7 @@
 #define WM_RIGHTCLICKMENUMSG (WM_USER + 1)
 
 
-TaskbarIcon::TaskbarIcon(TaskbarCallback settingsCallback, TaskbarCallback aboutCallback, TaskbarCallback quitCallback)
+TaskbarIcon::TaskbarIcon(TaskbarCallback settingsCallback, TaskbarCallback aboutCallback, TaskbarCallback quitCallback, TaskbarCallback sleepCallback, TaskbarCallback wakeCallback)
 {
     openSettingsWindow = settingsCallback;
     openAboutWindow = aboutCallback;
@@ -120,6 +120,16 @@ INT_PTR CALLBACK TaskbarIcon::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
         }
     case WM_INITDIALOG:
         //return OnInitDialog(hDlg); // TODO: why is this not needed?
+        break;
+    case WM_POWERBROADCAST:
+        switch (wParam) {
+        case PBT_APMRESUMEAUTOMATIC:
+            wakeApp();
+            break;
+        case PBT_APMSUSPEND:
+            sleepApp();
+            break;
+        }
         break;
     case WM_CLOSE:
         DestroyWindow(hDlg);
