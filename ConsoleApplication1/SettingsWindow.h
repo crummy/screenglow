@@ -15,5 +15,6 @@ private:
     INT_PTR CALLBACK AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
     void populateUIFromSettings(HWND hDlg);
     void populateSettingsFromUI(HWND hDlg);
+    void testConnection(HWND hDlg);
 };
 

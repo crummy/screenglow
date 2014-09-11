@@ -80,13 +80,6 @@ void newHubConnection(Hue *newHue) {
     hue = newHue;
 }
 
-// from http://vajris.wordpress.com/2012/10/15/conversion-tchar-wstring-string-string/
-string TCHARtoString(TCHAR* tchar) {
-    wstring w(&tchar[0]);
-    string s(w.begin(), w.end());
-    return s;
-}
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     settings = new Settings();
     screenCapture = new ScreenColourCapture();

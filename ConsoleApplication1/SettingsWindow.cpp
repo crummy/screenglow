@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "SettingsWindow.h"
+#include "Hue.h"
 #include "resource.h"
+#include "StringHelper.h"
 #include <CommCtrl.h>
 
 SettingsWindow::SettingsWindow(Settings *settings)
@@ -46,7 +48,7 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
             DestroyWindow(hDlg);
             break;
         case IDC_TESTBUTTON:
-            populateSettingsFromUI(hDlg);
+            testConnection(hDlg);
             break;
         case EN_CHANGE:
             HWND hWnd = (HWND)lParam;
@@ -137,4 +139,48 @@ void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
     TCHAR captureInterval[256];
     GetWindowText(GetDlgItem(hDlg, IDC_CAPTURETEXT), &captureInterval[0], 256);
     // TODO: Set captureInterval in Settings
+}
+
+void SettingsWindow::testConnection(HWND hDlg) {
+    TCHAR TIPAddress[256];
+    GetWindowText(GetDlgItem(hDlg, IDC_IPADDRESS), &TIPAddress[0], 256);
+    const string IPAddress = StringHelper::TCHARtoString(TIPAddress);
+    TCHAR TlightID[256];
+    GetWindowText(GetDlgItem(hDlg, IDC_LIGHTID), &TlightID[0], 256);
+    const string lightID = StringHelper::TCHARtoString(TlightID);
+    TCHAR Tusername[256];
+    GetWindowText(GetDlgItem(hDlg, IDC_USERNAME), &Tusername[0], 256);
+    const string username = StringHelper::TCHARtoString(Tusername);
+    Hue *testHue = new Hue(IPAddress, lightID, username);
+    connectionStatus result = testHue->testConnection();
+
+    // set response text 
+    LPCWSTR resultText;
+    switch (result) {
+    case connectionOK: {
+        // if connection was successful, set username in case a new one was created
+        const string newUsername = testHue->getUsername();
+        wstring newWUsername(newUsername.begin(), newUsername.end());
+        LPCWSTR newLPUsername = newWUsername.c_str();
+        SetWindowText(GetDlgItem(hDlg, IDC_USERNAME), newLPUsername);
+        resultText = L"Connection successful";
+        break;
+    }
+    case connectionBadID:
+        resultText = L"FAILED: Bad light ID";
+        break;
+    case connectionBadIP:
+        resultText = L"FAILED: Bad hub IP";
+        break;
+    case connectionNeedsLink:
+        resultText = L"FAILED: Press link button and try again";
+        break;
+    case connectionUnknownError:
+        resultText = L"FAILED: Unknown error!";
+        break;
+    }
+    HWND testTextControl = GetDlgItem(hDlg, IDC_TESTTEXT);
+    SetWindowText(testTextControl, resultText);
+
+    delete testHue;
 }

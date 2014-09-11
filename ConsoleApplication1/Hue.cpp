@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <regex>
+#include <assert.h>
 
 
 Hue::Hue(string ip, string lightID, string username) {
@@ -39,7 +40,7 @@ int Hue::sendMessage(string URL, string message, string method, string &returned
         headers = curl_slist_append(headers, "charsets: utf-8");
 
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method);
+        curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, method.c_str());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, message.c_str());
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, message.length());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
@@ -69,23 +70,27 @@ int Hue::sendMessage(string URL, string message, string &returned_data) {
     return sendMessage(URL, message, defaultMethod, returned_data);
 }
 
+// Tests the IP address, username, and light ID.
+// If the username is wrong, or if there is no username, connectionNeedsLink
 connectionStatus Hue::testConnection() {
-    string testURL = "http://" + ip + "/api/" + username + "/lights";
     string testResponse;
-    int testResult = sendMessage(testURL, "", "GET", testResponse);
-    if (testResult == CURLE_HTTP_RETURNED_ERROR) {
-        return connectionBadIP;
+    if (username.compare("") != 0) {
+        string testURL = "http://" + ip + "/api/" + username + "/lights";
+        int testResult = sendMessage(testURL, "", "GET", testResponse);
+        if (testResult == CURLE_HTTP_RETURNED_ERROR) {
+            return connectionBadIP;
+        }
+        else if (testResult != 0) {
+            return connectionUnknownError;
+        }
     }
-    else if (testResult != 0) {
-        return connectionUnknownError;
-    }
-    else if (testResponse.find("unauthorized user") != string::npos) {
+    if ((username.compare("") == 0) || (testResponse.find("unauthorized user") != string::npos)) {
         // We need to register a username.
         string registerURL = "http://" + ip + "/api";
         string registerBody = "{\"devicetype\": \"ScreenGlow\"}";
         string registerResponse;
         int registerResult = sendMessage(registerURL, registerBody, "POST", registerResponse);
-        if (testResponse.find("link button not pressed") != string::npos) {
+        if (registerResponse.find("link button not pressed") != string::npos) {
             // If the link button was not pressed but needs to be, just quit out. Outside you will handle
             // prompting them to press the button, and presumably call testConnection() again.
             return connectionNeedsLink;
@@ -109,15 +114,20 @@ connectionStatus Hue::testConnection() {
             }
         }
     }
+    assert(username.compare("") != 0);
     // At this point we should have a good connection. Check the light ID is correct.
     string lightCheckURL = "http://" + ip + "/api/" + username + "/lights/" + lightID + "/state";
     string lightCheckBody = "{\"on\": \"true\", \"sat\" : 255, \"bri\" : 255, \"hue\" : 10000}";
     string lightCheckResponse;
-    int lightCheckResult = sendMessage(lightCheckURL, lightCheckBody, lightCheckResponse);
+    int lightCheckResult = sendMessage(lightCheckURL, lightCheckBody, "PUT", lightCheckResponse);
     if (lightCheckResponse.find("not available") != string::npos) {
         return connectionBadID;
     }
     return connectionOK;
+}
+
+string Hue::getUsername() {
+    return username;
 }
 
 // Given a COLORREF, will change light_id to this colour. Returns 0 on success.

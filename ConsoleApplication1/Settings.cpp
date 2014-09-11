@@ -33,7 +33,7 @@ int Settings::saveSettings() {
     try {
         ofstream file(filename);
         for (map<string,TCHAR*>::iterator iterator = settings.begin(); iterator != settings.end(); iterator++) {
-            file << iterator->first << "=" << iterator->second << endl;
+            file << iterator->first << "=" << iterator->second << endl; // TODO: Convert TCHAR to string before writing
         }
         file.close();
     }

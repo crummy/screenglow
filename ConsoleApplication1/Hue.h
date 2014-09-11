@@ -26,6 +26,7 @@ public:
     Hue(string ip, string lightID, string username);
     connectionStatus testConnection();
     int changeColourTo(COLORREF colour);
+    string getUsername();
     ~Hue();
 private:
     Point convertColourToXY(COLORREF colour);
