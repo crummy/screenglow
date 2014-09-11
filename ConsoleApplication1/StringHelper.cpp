@@ -12,3 +12,10 @@ LPCWSTR StringHelper::StringToWstr(string str) {
     wstring wstr(str.begin(), str.end());
     return wstr.c_str();
 }
+
+TCHAR* StringHelper::IntToTCHAR(int i) {
+    wstring s = to_wstring(i);
+    //TCHAR* t = s.c_str();
+    TCHAR* tchar;
+    return tchar;
+}

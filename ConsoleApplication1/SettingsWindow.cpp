@@ -124,21 +124,21 @@ void SettingsWindow::populateUIFromSettings(HWND hWnd) {
 void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
     TCHAR IPAddress[256];
     GetWindowText(GetDlgItem(hDlg, IDC_IPADDRESS), &IPAddress[0], 256);
-    // TODO: Set IP address in settings
+    settings->setIPAddress(IPAddress);
     TCHAR* oldIPAddress = settings->getIPAddress();
     TCHAR lightID[256];
     GetWindowText(GetDlgItem(hDlg, IDC_LIGHTID), &lightID[0], 256);
-    // TODO: Set lightID in settings
+    settings->setLightID(lightID);
     TCHAR* oldLightID = settings->getLightId();
     if ((_tcscmp(IPAddress, oldIPAddress) != 0) || (_tcscmp(lightID, oldLightID) != 0)) {
-        // If the IP address or light ID have changed, then we need to get a new connection to the Hub.
+        // If the IP address or light ID or username has changed, then we need to get a new connection to the Hub.
     }
     TCHAR brightnessMinimum[256];
     GetWindowText(GetDlgItem(hDlg, IDC_MINBRIGHTNESSTEXT), &brightnessMinimum[0], 256);
-    // TODO: Set brightnessMinimum in settings
+    settings->setBrightnessMinimum(_tstoi(brightnessMinimum));
     TCHAR captureInterval[256];
     GetWindowText(GetDlgItem(hDlg, IDC_CAPTURETEXT), &captureInterval[0], 256);
-    // TODO: Set captureInterval in Settings
+    settings->setCaptureIntervalMs(_tstoi(captureInterval));
 }
 
 void SettingsWindow::testConnection(HWND hDlg) {

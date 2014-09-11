@@ -13,9 +13,13 @@ public:
     int getAverageColourMethod();
     bool isBrightnessEnabled();
     int getBrightnessMinimum();
+    void setBrightnessMinimum(int minimum);
     int getCaptureIntervalMs();
+    void setCaptureIntervalMs(int ms);
     TCHAR* getIPAddress();
+    void setIPAddress(TCHAR* IPAddress);
     TCHAR* getLightId();
+    void setLightID(TCHAR* lightID);
     int getColourBucketSize();
     int saveSettings();
 private:

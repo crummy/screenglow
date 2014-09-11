@@ -17,7 +17,7 @@ Settings::Settings() {
         while (getline(file, line)) {
             int delimiterPosition = line.find(delimiter);
             settingKey = line.substr(0, delimiterPosition);
-            settingValue = line.substr(delimiterPosition + 1);
+            settingValue = line.substr(delimiterPosition + 1); // TODO: put this in its own function, stringToTCHAR
             settingValueTCHAR = new TCHAR[settingValue.size() + 1];
             _tcscpy_s(settingValueTCHAR, settingValue.size() * sizeof(TCHAR), CA2T(settingValue.c_str()));
             settings[settingKey] = settingValueTCHAR;
@@ -62,6 +62,11 @@ bool Settings::isBrightnessEnabled() { // TODO: real string comparison
 
 int Settings::getBrightnessMinimum() {
     return _tstoi(settings["brightnessMinimum"]);
+}
+
+void Settings::setBrightnessMinimum(int minimum) {
+    wstring wMinimum = to_wstring(minimum);
+    //settings["brightnessMinimum"] = wMinimum.c_str();
 }
 
 int Settings::getCaptureIntervalMs() {

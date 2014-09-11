@@ -10,5 +10,6 @@ class StringHelper
 public:
     static string TCHARtoString(TCHAR* tchar);
     static LPCWSTR StringToWstr(string str);
+    static TCHAR* IntToTCHAR(int i);
 };
 
