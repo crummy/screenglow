@@ -16,5 +16,6 @@ private:
     void populateUIFromSettings(HWND hDlg);
     void populateSettingsFromUI(HWND hDlg);
     void testConnection(HWND hDlg);
+    string GetWindowString(HWND hDlg, int item);
 };
 

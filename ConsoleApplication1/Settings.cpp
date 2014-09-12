@@ -11,16 +11,12 @@ Settings::Settings() {
     if (file) {
         string settingKey;
         string settingValue;
-        TCHAR *settingValueTCHAR;
         string line;
         string delimiter = "=";
         while (getline(file, line)) {
             int delimiterPosition = line.find(delimiter);
             settingKey = line.substr(0, delimiterPosition);
-            settingValue = line.substr(delimiterPosition + 1); // TODO: put this in its own function, stringToTCHAR
-            settingValueTCHAR = new TCHAR[settingValue.size() + 1];
-            _tcscpy_s(settingValueTCHAR, settingValue.size() * sizeof(TCHAR), CA2T(settingValue.c_str()));
-            settings[settingKey] = settingValueTCHAR;
+            settings[settingKey] = settingValue;
         }
     } else {
         cout << "Exception reading settings file. Loading defaults." << endl;
@@ -32,7 +28,7 @@ Settings::Settings() {
 int Settings::saveSettings() {
     try {
         ofstream file(filename);
-        for (map<string,TCHAR*>::iterator iterator = settings.begin(); iterator != settings.end(); iterator++) {
+        for (map<string,string>::iterator iterator = settings.begin(); iterator != settings.end(); iterator++) {
             file << iterator->first << "=" << iterator->second << endl; // TODO: Convert TCHAR to string before writing
         }
         file.close();
@@ -50,47 +46,59 @@ Settings::~Settings()
 }
 
 int Settings::getAverageColourMethod() {
-    return _tstoi(settings["averageColourMethod"]);
+    return atoi(settings["averageColourMethod"].c_str());
 }
 
 bool Settings::isBrightnessEnabled() { // TODO: real string comparison
-    if (settings["isBrightnessEnabled"] == _T("true")) return true;
-    else if (settings["isBrightnessEnabled"] == _T("false")) return false;
+    if (settings["isBrightnessEnabled"].compare("true") == 0) return true;
+    else if (settings["isBrightnessEnabled"].compare("false") == 0) return false;
     else cout << "Error reading brightness setting!" << endl;
     return true;
 }
 
 int Settings::getBrightnessMinimum() {
-    return _tstoi(settings["brightnessMinimum"]);
+    return atoi(settings["brightnessMinimum"].c_str());
 }
 
 void Settings::setBrightnessMinimum(int minimum) {
-    wstring wMinimum = to_wstring(minimum);
-    //settings["brightnessMinimum"] = wMinimum.c_str();
+    string minString = to_string(minimum);
+    settings["brightnessMinimum"] = minString;
 }
 
 int Settings::getCaptureIntervalMs() {
-    return _tstoi(settings["captureIntervalMs"]);
+    return atoi(settings["captureIntervalMs"].c_str());
 }
 
-TCHAR* Settings::getIPAddress() {
+void Settings::setCaptureIntervalMs(int interval) {
+    settings["captureIntervalMs"] = to_string(interval);
+}
+
+string Settings::getIPAddress() {
     return settings["ipAddress"];
 }
 
-TCHAR* Settings::getLightId() {
+void Settings::setIPAddress(string ip) {
+    settings["ipAddress"] = ip;
+}
+
+string Settings::getLightId() {
     return settings["lightId"];
 }
 
+void Settings::setLightID(string lightID) {
+    settings["lightId"] = lightID;
+}
+
 int Settings::getColourBucketSize() {
-    return _tstoi(settings["colourBucketSize"]);
+    return atoi(settings["colourBucketSize"].c_str());
 }
 
 void Settings::loadDefaults() {
-    settings["averageColourMethod"] = _T("0");
-    settings["isBrightnessEnabled"] = _T("true");
-    settings["brightnessMinimum"] = _T("25");
-    settings["captureIntervalMs"] = _T("1000");
-    settings["ipAddress"] = _T("192.168.1.42");
-    settings["lightId"] = _T("3");
-    settings["colourBucketSize"] = _T("8");
+    settings["averageColourMethod"] = "0";
+    settings["isBrightnessEnabled"] = "true";
+    settings["brightnessMinimum"] = "25";
+    settings["captureIntervalMs"] = "1000";
+    settings["ipAddress"] = "192.168.1.42";
+    settings["lightId"] = "3";
+    settings["colourBucketSize"] = "8";
 }

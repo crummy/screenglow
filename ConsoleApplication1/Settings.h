@@ -16,14 +16,14 @@ public:
     void setBrightnessMinimum(int minimum);
     int getCaptureIntervalMs();
     void setCaptureIntervalMs(int ms);
-    TCHAR* getIPAddress();
-    void setIPAddress(TCHAR* IPAddress);
-    TCHAR* getLightId();
-    void setLightID(TCHAR* lightID);
+    string getIPAddress();
+    void setIPAddress(string IPAddress);
+    string getLightId();
+    void setLightID(string lightID);
     int getColourBucketSize();
     int saveSettings();
 private:
-    map<string, TCHAR*> settings;
+    map<string, string> settings;
     const string filename = "ScreenGlow_Settings.txt";
     void loadDefaults();
 };

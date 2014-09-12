@@ -2,8 +2,8 @@
 #include "SettingsWindow.h"
 #include "Hue.h"
 #include "resource.h"
-#include "StringHelper.h"
 #include <CommCtrl.h>
+#include <assert.h>
 
 SettingsWindow::SettingsWindow(Settings *settings)
 {
@@ -90,12 +90,12 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 // Populates UI elements (text boxes, sliders etc) with data extracted from the Settings object we have.
 void SettingsWindow::populateUIFromSettings(HWND hWnd) {
     HWND lighthWnd = GetDlgItem(hWnd, IDC_LIGHTID);
-    TCHAR* lightId = settings->getLightId();
-    SetWindowText(lighthWnd, lightId);
+    string lightId = settings->getLightId();
+    SetWindowText(lighthWnd, (LPCTSTR)lightId.c_str());
 
     HWND iphWnd = GetDlgItem(hWnd, IDC_IPADDRESS);
-    TCHAR* ipAddress = settings->getIPAddress();
-    SetWindowText(iphWnd, ipAddress);
+    string ipAddress = settings->getIPAddress();
+    SetWindowText(iphWnd, (LPCTSTR)ipAddress.c_str());
 
     HWND brightnessSliderhWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSSLIDER);
     SendMessage(brightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0, 255));
@@ -122,40 +122,31 @@ void SettingsWindow::populateUIFromSettings(HWND hWnd) {
 // Prefers values from text boxes over sliders, that way users can set values outside of the slider
 // ranges if they wish.
 void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
-    TCHAR IPAddress[256];
-    GetWindowText(GetDlgItem(hDlg, IDC_IPADDRESS), &IPAddress[0], 256);
-    settings->setIPAddress(IPAddress);
-    TCHAR* oldIPAddress = settings->getIPAddress();
-    TCHAR lightID[256];
-    GetWindowText(GetDlgItem(hDlg, IDC_LIGHTID), &lightID[0], 256);
-    settings->setLightID(lightID);
-    TCHAR* oldLightID = settings->getLightId();
-    if ((_tcscmp(IPAddress, oldIPAddress) != 0) || (_tcscmp(lightID, oldLightID) != 0)) {
+    string oldIPAddress = settings->getIPAddress();
+    string newIPAddress = GetWindowString(hDlg, IDC_IPADDRESS);
+    settings->setIPAddress(newIPAddress);
+
+    string oldLightID = settings->getLightId();
+    string newLightID = GetWindowString(hDlg, IDC_LIGHTID);
+    settings->setLightID(newLightID);
+    if ((newIPAddress.compare(oldIPAddress) != 0) || (newLightID.compare(oldLightID) != 0)) {
         // If the IP address or light ID or username has changed, then we need to get a new connection to the Hub.
     }
-    TCHAR brightnessMinimum[256];
-    GetWindowText(GetDlgItem(hDlg, IDC_MINBRIGHTNESSTEXT), &brightnessMinimum[0], 256);
-    settings->setBrightnessMinimum(_tstoi(brightnessMinimum));
-    TCHAR captureInterval[256];
-    GetWindowText(GetDlgItem(hDlg, IDC_CAPTURETEXT), &captureInterval[0], 256);
-    settings->setCaptureIntervalMs(_tstoi(captureInterval));
+    string brightnessMinimum = GetWindowString(hDlg, IDC_MINBRIGHTNESSTEXT);
+    settings->setBrightnessMinimum(atoi(brightnessMinimum.c_str()));
+    string captureInterval = GetWindowString(hDlg, IDC_CAPTURETEXT);
+    settings->setCaptureIntervalMs(atoi(captureInterval.c_str()));
 }
 
 void SettingsWindow::testConnection(HWND hDlg) {
-    TCHAR TIPAddress[256];
-    GetWindowText(GetDlgItem(hDlg, IDC_IPADDRESS), &TIPAddress[0], 256);
-    const string IPAddress = StringHelper::TCHARtoString(TIPAddress);
-    TCHAR TlightID[256];
-    GetWindowText(GetDlgItem(hDlg, IDC_LIGHTID), &TlightID[0], 256);
-    const string lightID = StringHelper::TCHARtoString(TlightID);
-    TCHAR Tusername[256];
-    GetWindowText(GetDlgItem(hDlg, IDC_USERNAME), &Tusername[0], 256);
-    const string username = StringHelper::TCHARtoString(Tusername);
+    const string IPAddress = GetWindowString(hDlg, IDC_IPADDRESS);
+    const string lightID = GetWindowString(hDlg, IDC_LIGHTID);
+    const string username = GetWindowString(hDlg, IDC_USERNAME);
     Hue *testHue = new Hue(IPAddress, lightID, username);
     connectionStatus result = testHue->testConnection();
 
     // set response text 
-    LPCWSTR resultText;
+    LPCSTR resultText;
     switch (result) {
     case connectionOK: {
         // if connection was successful, set username in case a new one was created
@@ -163,24 +154,35 @@ void SettingsWindow::testConnection(HWND hDlg) {
         wstring newWUsername(newUsername.begin(), newUsername.end());
         LPCWSTR newLPUsername = newWUsername.c_str();
         SetWindowText(GetDlgItem(hDlg, IDC_USERNAME), newLPUsername);
-        resultText = L"Connection successful";
+        resultText = "Connection successful";
         break;
     }
     case connectionBadID:
-        resultText = L"FAILED: Bad light ID";
+        resultText = "FAILED: Bad light ID";
         break;
     case connectionBadIP:
-        resultText = L"FAILED: Bad hub IP";
+        resultText = "FAILED: Bad hub IP";
         break;
     case connectionNeedsLink:
-        resultText = L"FAILED: Press link button and try again";
+        resultText = "FAILED: Press link button and try again";
         break;
     case connectionUnknownError:
-        resultText = L"FAILED: Unknown error!";
+        resultText = "FAILED: Unknown error!";
         break;
+    default:
+        resultText = "Unrecognized error?!";
     }
     HWND testTextControl = GetDlgItem(hDlg, IDC_TESTTEXT);
-    SetWindowText(testTextControl, resultText);
+    SetWindowTextA(testTextControl, resultText);
 
     delete testHue;
+}
+
+string SettingsWindow::GetWindowString(HWND hDlg, int item) {
+    char buffer[256];
+    HWND hWnd = GetDlgItem(hDlg, item);
+    int textLen = GetWindowTextLength(hWnd);
+    assert(256 >= textLen);
+    GetWindowTextA(hWnd, buffer, textLen);
+    return buffer;
 }
