@@ -5,9 +5,10 @@
 #include <CommCtrl.h>
 #include <assert.h>
 
-SettingsWindow::SettingsWindow(Settings *settings)
+SettingsWindow::SettingsWindow(Settings *settings, SettingsWindowCallback reconnectHub)
 {
     this->settings = settings;
+    this->reconnectHub = reconnectHub;
 }
 
 
@@ -89,33 +90,27 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 
 // Populates UI elements (text boxes, sliders etc) with data extracted from the Settings object we have.
 void SettingsWindow::populateUIFromSettings(HWND hWnd) {
-    HWND lighthWnd = GetDlgItem(hWnd, IDC_LIGHTID);
     string lightId = settings->getLightId();
-    SetWindowText(lighthWnd, (LPCTSTR)lightId.c_str());
+    SetWindowString(hWnd, IDC_LIGHTID, lightId);
 
-    HWND iphWnd = GetDlgItem(hWnd, IDC_IPADDRESS);
     string ipAddress = settings->getIPAddress();
-    SetWindowText(iphWnd, (LPCTSTR)ipAddress.c_str());
+    SetWindowString(hWnd, IDC_IPADDRESS, ipAddress);
+
+    string username = settings->getUsername();
+    SetWindowString(hWnd, IDC_USERNAME, username);
 
     HWND brightnessSliderhWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSSLIDER);
     SendMessage(brightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0, 255));
     int brightnessMinimum = settings->getBrightnessMinimum();
     SendMessage(brightnessSliderhWnd, TBM_SETPOS, (WPARAM)brightnessMinimum, (LPARAM)MAKELONG(brightnessMinimum, 0));
-
-    HWND brightnessTexthWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSTEXT);
-    TCHAR brightnessMinimumString[16];
-    _stprintf_s(brightnessMinimumString, 16, _T("%d"), brightnessMinimum);
-    SetWindowText(brightnessTexthWnd, brightnessMinimumString);
+    SetWindowString(hWnd, IDC_MINBRIGHTNESSTEXT, brightnessMinimum);
     
     HWND captureSliderhWnd = GetDlgItem(hWnd, IDC_CAPTURESLIDER);
     SendMessage(captureSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(30, 3000));
     int captureInterval = settings->getCaptureIntervalMs();
     SendMessage(captureSliderhWnd, TBM_SETPOS, (WPARAM)captureInterval, (LPARAM)MAKELONG(captureInterval, 0));
+    SetWindowString(hWnd, IDC_CAPTURETEXT, captureInterval);
 
-    HWND captureTexthWnd = GetDlgItem(hWnd, IDC_CAPTURETEXT);
-    TCHAR captureIntervalString[16];
-    _stprintf_s(captureIntervalString, _T("%d"), captureInterval);
-    SetWindowText(captureTexthWnd, captureIntervalString);
 }
 
 // Takes values from the settings window and inserts them into the settings object.
@@ -125,12 +120,20 @@ void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
     string oldIPAddress = settings->getIPAddress();
     string newIPAddress = GetWindowString(hDlg, IDC_IPADDRESS);
     settings->setIPAddress(newIPAddress);
+    bool IPChanged = (newIPAddress.compare(oldIPAddress) != 0);
 
     string oldLightID = settings->getLightId();
     string newLightID = GetWindowString(hDlg, IDC_LIGHTID);
     settings->setLightID(newLightID);
-    if ((newIPAddress.compare(oldIPAddress) != 0) || (newLightID.compare(oldLightID) != 0)) {
-        // If the IP address or light ID or username has changed, then we need to get a new connection to the Hub.
+    bool IDChanged = (newLightID.compare(oldLightID) != 0);
+
+    string oldUsername = settings->getUsername();
+    string newUsername = GetWindowString(hDlg, IDC_USERNAME);
+    settings->setUsername(newUsername);
+    bool usernameChanged = (newUsername.compare(oldUsername) != 0);
+
+    if (IPChanged || IDChanged || usernameChanged) {
+        reconnectHub();
     }
     string brightnessMinimum = GetWindowString(hDlg, IDC_MINBRIGHTNESSTEXT);
     settings->setBrightnessMinimum(atoi(brightnessMinimum.c_str()));
@@ -181,8 +184,19 @@ void SettingsWindow::testConnection(HWND hDlg) {
 string SettingsWindow::GetWindowString(HWND hDlg, int item) {
     char buffer[256];
     HWND hWnd = GetDlgItem(hDlg, item);
-    int textLen = GetWindowTextLength(hWnd);
+    int textLen = GetWindowTextLengthA(hWnd) + 1; // +1 seems necessary for null character? odd... not in documentation
     assert(256 >= textLen);
     GetWindowTextA(hWnd, buffer, textLen);
     return buffer;
+}
+
+void SettingsWindow::SetWindowString(HWND hDlg, int item, string str) {
+    HWND hWnd = GetDlgItem(hDlg, item);
+    SetWindowTextA(hWnd, str.c_str());
+}
+
+void SettingsWindow::SetWindowString(HWND hDlg, int item, int i) {
+    HWND hWnd = GetDlgItem(hDlg, item);
+    string str = to_string(i);
+    SetWindowTextA(hWnd, str.c_str());
 }

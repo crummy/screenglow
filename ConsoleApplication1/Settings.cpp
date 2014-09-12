@@ -16,6 +16,7 @@ Settings::Settings() {
         while (getline(file, line)) {
             int delimiterPosition = line.find(delimiter);
             settingKey = line.substr(0, delimiterPosition);
+            settingValue = line.substr(delimiterPosition + 1);
             settings[settingKey] = settingValue;
         }
     } else {
@@ -81,7 +82,16 @@ void Settings::setIPAddress(string ip) {
     settings["ipAddress"] = ip;
 }
 
+string Settings::getUsername() {
+    return settings["username"];
+}
+
+void Settings::setUsername(string username) {
+    settings["username"] = username;
+}
+
 string Settings::getLightId() {
+    string id = settings["lightId"];
     return settings["lightId"];
 }
 
@@ -95,10 +105,11 @@ int Settings::getColourBucketSize() {
 
 void Settings::loadDefaults() {
     settings["averageColourMethod"] = "0";
-    settings["isBrightnessEnabled"] = "true";
+    settings["isBrightnessEnabled"] = "false";
+    settings["username"] = "";
     settings["brightnessMinimum"] = "25";
     settings["captureIntervalMs"] = "1000";
-    settings["ipAddress"] = "192.168.1.42";
-    settings["lightId"] = "3";
+    settings["ipAddress"] = "";
+    settings["lightId"] = "";
     settings["colourBucketSize"] = "8";
 }

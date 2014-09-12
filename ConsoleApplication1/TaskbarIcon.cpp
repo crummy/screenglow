@@ -11,6 +11,8 @@ TaskbarIcon::TaskbarIcon(TaskbarCallback settingsCallback, TaskbarCallback about
     openSettingsWindow = settingsCallback;
     openAboutWindow = aboutCallback;
     quitApp = quitCallback;
+    sleepApp = sleepCallback;
+    wakeApp = wakeCallback;
 }
 
 

@@ -27,6 +27,8 @@ public:
     connectionStatus testConnection();
     int changeColourTo(COLORREF colour);
     string getUsername();
+    void turnOn();
+    void turnOff();
     ~Hue();
 private:
     Point convertColourToXY(COLORREF colour);

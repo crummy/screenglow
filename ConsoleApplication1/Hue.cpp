@@ -130,6 +130,26 @@ string Hue::getUsername() {
     return username;
 }
 
+void Hue::turnOn() {
+    string url = "http://" + ip + "/api/" + username + "/lights/" + lightID + "/state";
+    string body = "{\"on\": \"true\"}";
+    string response;
+    int result = sendMessage(url, body, "PUT", response);
+    if (result != 0) {
+        // log error
+    }
+}
+
+void Hue::turnOff() {
+    string url = "http://" + ip + "/api/" + username + "/lights/" + lightID + "/state";
+    string body = "{\"on\": \"false\"}";
+    string response;
+    int result = sendMessage(url, body, "PUT", response);
+    if (result != 0) {
+        // log error
+    }
+}
+
 // Given a COLORREF, will change light_id to this colour. Returns 0 on success.
 int Hue::changeColourTo(COLORREF colour) {
     int success = 0;

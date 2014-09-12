@@ -18,6 +18,8 @@ public:
     void setCaptureIntervalMs(int ms);
     string getIPAddress();
     void setIPAddress(string IPAddress);
+    string getUsername();
+    void setUsername(string username);
     string getLightId();
     void setLightID(string lightID);
     int getColourBucketSize();

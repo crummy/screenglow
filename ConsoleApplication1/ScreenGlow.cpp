@@ -50,9 +50,41 @@ HANDLE setUpWait(int milliseconds) {
     return hTimerQueue;
 }
 
+void quitApp() {
+    // if setting is on, turn off light
+    if (hue) {
+        hue->turnOff();
+    }
+    settings->saveSettings();
+}
+
+void sleepApp() {
+    if (hue) {
+        hue->turnOff();
+    }
+}
+
+void wakeApp() {
+    if (hue) {
+        hue->turnOn();
+    }
+}
+
+// Kills old hub, connects to new hub.
+// Presumably called after something's changed, like the hub IP or light ID.
+// Only connect if IP, ID, and username exist.
+void reconnectHub() {
+    delete hue;
+    string ip = settings->getIPAddress();
+    string id = settings->getLightId();
+    string username = settings->getUsername();
+    if (!ip.empty() && !id.empty() && !username.empty()) {
+        hue = new Hue(ip, id, username);
+    }
+}
 
 void openSettingsWindow() {
-    SettingsWindow *settingsWindow = new SettingsWindow(settings);
+    SettingsWindow *settingsWindow = new SettingsWindow(settings, reconnectHub);
     settingsWindow->show(hInst);
 }
 
@@ -61,35 +93,16 @@ void openAboutWindow() {
     aboutWindow->show(hInst);
 }
 
-void quitApp() {
-    // if setting is on, turn off light
-    // hue->turnofflight()
-    settings->saveSettings();
-}
-
-void sleepApp() {
-    // turn off light
-}
-
-void wakeApp() {
-    // turn on light
-}
-
-void newHubConnection(Hue *newHue) {
-    delete hue;
-    hue = newHue;
-}
-
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+    // set up globals. sorry for globals.
     settings = new Settings();
     screenCapture = new ScreenColourCapture();
     hInst = hInstance;
 
-    //string hubIPAddress = TCHARtoString(settings->getIPAddress());
-    //hue = new Hue(hubIPAddress);
-    //string lightID = TCHARtoString(settings->getLightId());
-    //hue->selectLight(lightID);
+    reconnectHub();
+
     HANDLE timerQueue = setUpWait(1000);
+
     TaskbarIcon *taskbarIcon = new TaskbarIcon(openSettingsWindow, openAboutWindow, quitApp, sleepApp, wakeApp);
     taskbarIcon->show(hInstance);
 
@@ -99,6 +112,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         DispatchMessage(&msg);
     }
 
+    if (hue) {
+        delete hue;
+    }
     DeleteTimerQueue(timerQueue);
     return (int)msg.wParam;
 }
