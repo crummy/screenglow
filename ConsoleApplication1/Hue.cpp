@@ -132,7 +132,7 @@ string Hue::getUsername() {
 
 void Hue::turnOn() {
     string url = "http://" + ip + "/api/" + username + "/lights/" + lightID + "/state";
-    string body = "{\"on\": \"true\"}";
+    string body = "{\"on\": true}";
     string response;
     int result = sendMessage(url, body, "PUT", response);
     if (result != 0) {
@@ -142,7 +142,7 @@ void Hue::turnOn() {
 
 void Hue::turnOff() {
     string url = "http://" + ip + "/api/" + username + "/lights/" + lightID + "/state";
-    string body = "{\"on\": \"false\"}";
+    string body = "{\"on\": false}";
     string response;
     int result = sendMessage(url, body, "PUT", response);
     if (result != 0) {

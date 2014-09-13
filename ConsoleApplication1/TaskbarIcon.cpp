@@ -110,7 +110,7 @@ INT_PTR CALLBACK TaskbarIcon::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
         wmEvent = HIWORD(wParam);
         switch (wmId) {
         case ID_ABOUT:
-            (*openAboutWindow)();
+            (*openAboutWindow)(); // TODO: why am I using strange syntax here?
             break;
         case ID_SETTINGS:
             (*openSettingsWindow)();
@@ -138,6 +138,7 @@ INT_PTR CALLBACK TaskbarIcon::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
+        quitApp();
         Shell_NotifyIcon(NIM_DELETE, &niData);
         break;
     }
