@@ -19,4 +19,5 @@ Have your Philips Hue lights match your monitor's colour.
 ## License
 
 <img src="http://i.creativecommons.org/p/zero/1.0/88x31.png" style="border-style: none;" alt="CC0" />
+
 This software is available under a Creative Commons CC0 1.0 Universal (CC-0) license.
