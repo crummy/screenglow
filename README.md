@@ -2,7 +2,7 @@
 
 Have your Philips Hue lights match your monitor's colour.
 
-[Screenshot of settings](http://i.imgur.com/SS4R1BA.png)
+![Screenshot of settings](http://i.imgur.com/SS4R1BA.png)
 
 ## Features
 
