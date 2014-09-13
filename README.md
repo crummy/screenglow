@@ -15,3 +15,11 @@ Have your Philips Hue lights match your monitor's colour.
 
 * Different algorithms to choose "average" colour of screen
 * Incorporate brightness information from screen into final colour
+
+## License
+
+<a rel="license" href="http://creativecommons.org/publicdomain/zero/1.0/">
+  <img src="http://i.creativecommons.org/p/zero/1.0/88x31.png" style="border-style: none;" alt="CC0" />
+</a>
+
+This software is available under a Creative Commons CC0 1.0 Universal (CC-0) license.
