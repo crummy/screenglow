@@ -85,6 +85,7 @@
   <ItemGroup>
     <ClInclude Include="AboutWindow.h" />
     <ClInclude Include="Hue.h" />
+    <ClInclude Include="Log.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="ScreenColourCapture.h" />
     <ClInclude Include="Settings.h" />
@@ -95,6 +96,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AboutWindow.cpp" />
+    <ClCompile Include="Log.cpp" />
     <ClCompile Include="ScreenColourCapture.cpp" />
     <ClCompile Include="ScreenGlow.cpp" />
     <ClCompile Include="Hue.cpp" />

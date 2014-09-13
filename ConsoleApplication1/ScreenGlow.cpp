@@ -9,6 +9,7 @@
 #include "AboutWindow.h"
 #include "TaskbarIcon.h"
 #include "ScreenColourCapture.h"
+#include "Log.h"
 #include <iostream>
 #include <fstream>
 #include <windows.h>
@@ -18,13 +19,14 @@ Hue *hue = NULL;
 Settings *settings;
 ScreenColourCapture *screenCapture;
 HINSTANCE hInst;
+Log *logging;
 
 using namespace std;
 
 VOID CALLBACK TimerRoutine(PVOID lpParam, BOOLEAN TimerOrWaitFired)
 {
     if (lpParam == NULL) {
-        printf("TimerRoutine lpParam is NULL\n");
+        logging->error("TimerRoutine lpParam is NULL");
     } else {
         COLORREF averageColour = screenCapture->getScreenColour();
         if (hue != NULL) {
@@ -52,19 +54,28 @@ HANDLE setUpWait(int milliseconds) {
 
 void quitApp() {
     // if setting is on, turn off light
+    logging->info("App quitting");
     if (hue) {
         hue->turnOff();
     }
-    settings->saveSettings();
+    int saveSuccess = settings->saveSettings();
+    if (saveSuccess == 0) {
+        logging->info("Settings saved.");
+    }
+    else {
+        logging->warn("Settings failed to save!");
+    }
 }
 
 void sleepApp() {
+    logging->info("App going to sleep");
     if (hue) {
         hue->turnOff();
     }
 }
 
 void wakeApp() {
+    logging->info("App waking up");
     if (hue) {
         hue->turnOn();
     }
@@ -98,6 +109,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     settings = new Settings();
     screenCapture = new ScreenColourCapture();
     hInst = hInstance;
+    logging = new Log("ScreenGlow_log.txt", true, true, true, true);
 
     reconnectHub();
 

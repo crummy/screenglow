@@ -78,9 +78,11 @@ connectionStatus Hue::testConnection() {
         string testURL = "http://" + ip + "/api/" + username + "/lights";
         int testResult = sendMessage(testURL, "", "GET", testResponse);
         if (testResult == CURLE_HTTP_RETURNED_ERROR) {
+            logging->warn("Tested connection, but received HTTP error >400");
             return connectionBadIP;
         }
         else if (testResult != 0) {
+            logging->warn("Tested connection, but received error " + testResult);
             return connectionUnknownError;
         }
     }
@@ -93,6 +95,7 @@ connectionStatus Hue::testConnection() {
         if (registerResponse.find("link button not pressed") != string::npos) {
             // If the link button was not pressed but needs to be, just quit out. Outside you will handle
             // prompting them to press the button, and presumably call testConnection() again.
+            logging->info("Attempting to acquire username, but link button not pressed");
             return connectionNeedsLink;
         }
         else {
@@ -102,6 +105,7 @@ connectionStatus Hue::testConnection() {
                 username_regex = regex("\"success\":\\{\"username\":\"(.*)\"\\}");
             }
             catch (const regex_error &e) {
+                logging->error("Tried to register app but couldn't regex username from response");
                 return connectionUnknownError;
             }
             smatch match;
@@ -110,6 +114,7 @@ connectionStatus Hue::testConnection() {
                 username = match[1];
             }
             else {
+                logging->error("Tried to register app but couldn't match username from response");
                 return connectionUnknownError;
             }
         }
@@ -117,12 +122,14 @@ connectionStatus Hue::testConnection() {
     assert(username.compare("") != 0);
     // At this point we should have a good connection. Check the light ID is correct.
     string lightCheckURL = "http://" + ip + "/api/" + username + "/lights/" + lightID + "/state";
-    string lightCheckBody = "{\"on\": \"true\", \"sat\" : 255, \"bri\" : 255, \"hue\" : 10000}";
+    string lightCheckBody = "{\"on\": true, \"sat\" : 255, \"bri\" : 255, \"hue\" : 10000}";
     string lightCheckResponse;
     int lightCheckResult = sendMessage(lightCheckURL, lightCheckBody, "PUT", lightCheckResponse);
     if (lightCheckResponse.find("not available") != string::npos) {
+        logging->warn("Communicating with hub, but lightID seems unavailable");
         return connectionBadID;
     }
+    logging->info("Successfully connected to hub!");
     return connectionOK;
 }
 
@@ -136,7 +143,7 @@ void Hue::turnOn() {
     string response;
     int result = sendMessage(url, body, "PUT", response);
     if (result != 0) {
-        // log error
+        logging->error("Failed to turn on light!");
     }
 }
 
@@ -146,7 +153,7 @@ void Hue::turnOff() {
     string response;
     int result = sendMessage(url, body, "PUT", response);
     if (result != 0) {
-        // log error
+        logging->error("Failed to turn off light!");
     }
 }
 
