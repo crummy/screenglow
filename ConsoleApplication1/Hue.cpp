@@ -47,11 +47,10 @@ int Hue::sendMessage(string URL, string message, string method, string &returned
         curl_easy_setopt(curl, CURLOPT_FAILONERROR, true);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
         curl_easy_setopt(curl, CURLOPT_URL, URL.c_str());
-        //curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
         CURLcode res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
-            cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
+            logging->error("curl_easy_perform() failed: " + res);
             success = (int)res;
         } else {
             returned_data = data.str();
@@ -59,7 +58,7 @@ int Hue::sendMessage(string URL, string message, string method, string &returned
         curl_easy_cleanup(curl);
     }
     else {
-        cout << "curl failed initialization!!\n" << endl;
+        logging->error("curl failed initialization!!");
         success = -1;
     }
     return success;
@@ -161,7 +160,6 @@ void Hue::turnOff() {
 int Hue::changeColourTo(COLORREF colour) {
     int success = 0;
     Point xy = convertColourToXY(colour);
-    cout << "xy: " << xy.x << "," << xy.y << endl;
     int brightness = convertColourToBrightness(colour);
     stringstream x, y;
     x << xy.x;
@@ -172,8 +170,7 @@ int Hue::changeColourTo(COLORREF colour) {
     success = sendMessage(URL, body, returned_data);
     if (returned_data.find("success") == string::npos) {
         success = -1;
-        cout << "changeColourTo failed. Sent data: " << endl << body << endl;
-        cout << "Returned data : " << endl << returned_data << endl;
+        logging->error("changeColourTo failed. Response:" + returned_data);
     }
     return success;
 }
@@ -185,7 +182,6 @@ Hue::Point Hue::convertColourToXY(COLORREF colour) {
     float red = (float)GetRValue(colour) / 255;
     float green = (float)GetGValue(colour) / 255;
     float blue = (float)GetBValue(colour) / 255;
-    cout << "RGB: " << red << "," << green << "," << blue << endl;
     
     // Apply gamma correction
     red   = (red   > 0.04045f) ? pow((red   + 0.055f) / (1.0f + 0.055f), 2.4f) : (red   / 12.92f);
@@ -240,7 +236,6 @@ Hue::Point Hue::convertColourToXY(COLORREF colour) {
         xyPoint.x = closestPoint.x;
         xyPoint.y = closestPoint.y;
     }
-    cout << "Returning XY: " << xyPoint.x << "," << xyPoint.y << endl;
     return Point(xyPoint.x, xyPoint.y);
 }
 

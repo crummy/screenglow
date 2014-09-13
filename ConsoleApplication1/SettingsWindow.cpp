@@ -34,13 +34,33 @@ INT_PTR CALLBACK SettingsWindow::StaticAppDlgProc(HWND hDlg, UINT uMsg, WPARAM w
 }
 
 INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    int wmEvent, wmId;
     switch (uMsg) {
     case WM_INITDIALOG: {
         populateUIFromSettings(hDlg);
         break;
     }
     case WM_COMMAND:
-        switch (wParam) {
+        wmEvent = HIWORD(wParam);
+        wmId = LOWORD(wParam);
+        switch (wmEvent) {
+        case EN_KILLFOCUS:
+            HWND hWnd = (HWND)lParam;
+            if (hWnd == GetDlgItem(hDlg, IDC_MINBRIGHTNESSTEXT)) {
+                setSliderValueFromText(hDlg, IDC_MINBRIGHTNESSSLIDER, IDC_MINBRIGHTNESSTEXT);
+            }
+            else if (hWnd == GetDlgItem(hDlg, IDC_CAPTURETEXT)) {
+                setSliderValueFromText(hDlg, IDC_CAPTURESLIDER, IDC_CAPTURETEXT);
+            }
+            else if (hWnd == GetDlgItem(hDlg, IDC_MAXBRIGHTNESSSLIDER)) {
+                setSliderValueFromText(hDlg, IDC_MAXBRIGHTNESSSLIDER, IDC_MAXBRIGHTNESSTEXT);
+            }
+            else if (hWnd == GetDlgItem(hDlg, IDC_BUCKETSLIDER)) {
+                setSliderValueFromText(hDlg, IDC_BUCKETSLIDER, IDC_BUCKETTEXT);
+            }
+            break;
+        }
+        switch (wmId) {
         case IDC_OK:
             populateSettingsFromUI(hDlg);
             DestroyWindow(hDlg);
@@ -51,17 +71,6 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
         case IDC_TESTBUTTON:
             testConnection(hDlg);
             break;
-        case EN_CHANGE:
-            HWND hWnd = (HWND)lParam;
-            if (hWnd == GetDlgItem(hDlg, IDC_MINBRIGHTNESSTEXT)) {
-                string newBrightnessMinimumString;
-                newBrightnessMinimumString.resize(GetWindowTextLength(hWnd) + 1, '\0');
-                GetWindowText(hWnd, LPWSTR(newBrightnessMinimumString.c_str()), 8);
-                int newBrightnessMinimum = atoi(newBrightnessMinimumString.c_str());
-                HWND brightnessSliderhWnd = GetDlgItem(hDlg, IDC_MINBRIGHTNESSSLIDER);
-                SendMessage(brightnessSliderhWnd, TBM_SETPOS, (WPARAM)newBrightnessMinimum, (LPARAM)MAKELONG(newBrightnessMinimum, 0));
-            }
-            break;
         }
     case WM_HSCROLL:
         switch (LOWORD(wParam)) {
@@ -69,18 +78,16 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
         case TB_ENDTRACK:
             HWND sliderhWnd = (HWND)lParam;
             if (sliderhWnd == GetDlgItem(hDlg, IDC_MINBRIGHTNESSSLIDER)) {
-                int newBrightnessMinimum = SendMessage(sliderhWnd, TBM_GETPOS, 0, 0);
-                string newBrightnessMinimumString = to_string(newBrightnessMinimum);
-                wstring wNewBrightnessMinimumString = wstring(newBrightnessMinimumString.begin(), newBrightnessMinimumString.end());
-                HWND texthWnd = GetDlgItem(hDlg, IDC_MINBRIGHTNESSTEXT);
-                SetWindowText(texthWnd, wNewBrightnessMinimumString.c_str());
+                setTextFromSliderValue(hDlg, IDC_MINBRIGHTNESSTEXT, IDC_MINBRIGHTNESSSLIDER);
             }
             else if (sliderhWnd == GetDlgItem(hDlg, IDC_CAPTURESLIDER)) {
-                int newCaptureInterval = SendMessage(sliderhWnd, TBM_GETPOS, 0, 0);
-                string newCaptureIntervalString = to_string(newCaptureInterval);
-                wstring wNewCaptureIntervalString = wstring(newCaptureIntervalString.begin(), newCaptureIntervalString.end());
-                HWND texthWnd = GetDlgItem(hDlg, IDC_CAPTURETEXT);
-                SetWindowText(texthWnd, wNewCaptureIntervalString.c_str());
+                setTextFromSliderValue(hDlg, IDC_CAPTURETEXT, IDC_CAPTURESLIDER);
+            }
+            else if (sliderhWnd == GetDlgItem(hDlg, IDC_MAXBRIGHTNESSSLIDER)) {
+                setTextFromSliderValue(hDlg, IDC_MAXBRIGHTNESSTEXT, IDC_MAXBRIGHTNESSSLIDER);
+            }
+            else if (sliderhWnd == GetDlgItem(hDlg, IDC_BUCKETSLIDER)) {
+                setTextFromSliderValue(hDlg, IDC_BUCKETTEXT, IDC_BUCKETSLIDER);
             }
             break;
         }
@@ -88,7 +95,21 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
     return DefWindowProc(hDlg, uMsg, wParam, lParam);
 }
 
+// Helper function that sets the value of a slider to the integer described in a text box
+void SettingsWindow::setSliderValueFromText(HWND hWnd, int SLIDER, int TEXT) {
+    int newValue = GetWindowInt(hWnd, TEXT);
+    HWND sliderhWnd = GetDlgItem(hWnd, SLIDER);
+    SendMessage(sliderhWnd, TBM_SETPOS, (WPARAM)newValue, (LPARAM)MAKELONG(newValue, 0));
+}
+
+void SettingsWindow::setTextFromSliderValue(HWND hWnd, int TEXT, int SLIDER) {
+    HWND sliderhWnd = GetDlgItem(hWnd, SLIDER);
+    int newValue = SendMessage(sliderhWnd, TBM_GETPOS, 0, 0);
+    SetWindowString(hWnd, TEXT, newValue);
+}
+
 // Populates UI elements (text boxes, sliders etc) with data extracted from the Settings object we have.
+// Also sets min/max range for sliders...
 void SettingsWindow::populateUIFromSettings(HWND hWnd) {
     string lightId = settings->getLightId();
     SetWindowString(hWnd, IDC_LIGHTID, lightId);
@@ -99,11 +120,25 @@ void SettingsWindow::populateUIFromSettings(HWND hWnd) {
     string username = settings->getUsername();
     SetWindowString(hWnd, IDC_USERNAME, username);
 
-    HWND brightnessSliderhWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSSLIDER);
-    SendMessage(brightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0, 255));
-    int brightnessMinimum = settings->getBrightnessMinimum();
-    SendMessage(brightnessSliderhWnd, TBM_SETPOS, (WPARAM)brightnessMinimum, (LPARAM)MAKELONG(brightnessMinimum, 0));
-    SetWindowString(hWnd, IDC_MINBRIGHTNESSTEXT, brightnessMinimum);
+    HWND powerOptionhWnd = GetDlgItem(hWnd, IDC_POWERSLEEP);
+    bool powerOption = settings->isPowerOptionEnabled();
+    SendMessage(powerOptionhWnd, BM_SETCHECK, (WPARAM)powerOption, (LPARAM)0);
+
+    HWND brightnesshWnd = GetDlgItem(hWnd, IDC_BRIGHTNESSCHECK);
+    bool brightnessEnabled = settings->isBrightnessEnabled();
+    SendMessage(brightnesshWnd, BM_SETCHECK, (WPARAM)brightnessEnabled, (LPARAM)0);
+
+    HWND maxBrightnessSliderhWnd = GetDlgItem(hWnd, IDC_MAXBRIGHTNESSSLIDER);
+    SendMessage(maxBrightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0, 100));
+    int maxBrightnessMinimum = settings->getBrightnessMaximum();
+    SendMessage(maxBrightnessSliderhWnd, TBM_SETPOS, (WPARAM)maxBrightnessMinimum, (LPARAM)MAKELONG(maxBrightnessMinimum, 0));
+    SetWindowString(hWnd, IDC_MAXBRIGHTNESSTEXT, maxBrightnessMinimum);
+
+    HWND minBrightnessSliderhWnd = GetDlgItem(hWnd, IDC_MINBRIGHTNESSSLIDER);
+    SendMessage(minBrightnessSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(0, 100));
+    int minBrightnessMinimum = settings->getBrightnessMinimum();
+    SendMessage(minBrightnessSliderhWnd, TBM_SETPOS, (WPARAM)minBrightnessMinimum, (LPARAM)MAKELONG(minBrightnessMinimum, 0));
+    SetWindowString(hWnd, IDC_MINBRIGHTNESSTEXT, minBrightnessMinimum);
     
     HWND captureSliderhWnd = GetDlgItem(hWnd, IDC_CAPTURESLIDER);
     SendMessage(captureSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(30, 3000));
@@ -188,6 +223,18 @@ string SettingsWindow::GetWindowString(HWND hDlg, int item) {
     assert(256 >= textLen);
     GetWindowTextA(hWnd, buffer, textLen);
     return buffer;
+}
+
+int SettingsWindow::GetWindowInt(HWND hDlg, int item) {
+    string s = GetWindowString(hDlg, item);
+    int i = -1;
+    try {
+        i = stoi(s);
+    }
+    catch (invalid_argument) {
+        logging->warn("Failed to convert string to int!");
+    }
+    return i;
 }
 
 void SettingsWindow::SetWindowString(HWND hDlg, int item, string str) {
