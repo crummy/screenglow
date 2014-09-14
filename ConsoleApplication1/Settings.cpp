@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "Settings.h"
-#include <atlstr.h>
 
 #include <fstream>
 #include <iostream>
@@ -36,9 +35,9 @@ int Settings::saveSettings() {
     }
     catch (ofstream::failure e) {
         logging->error("Exception writing settings file!");
-        return 0;
+        return 1;
     }
-    return 1;
+    return 0;
 }
 
 

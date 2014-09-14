@@ -45,9 +45,18 @@ HANDLE setUpWait(int milliseconds) {
     HANDLE hTimerQueue = NULL;
     int arg = 123;
     gDoneEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    if (gDoneEvent == NULL) {
+        logging->error("CreateEvent failed!");
+    }
     hTimerQueue = CreateTimerQueue();
+    if (hTimerQueue == NULL) {
+        logging->error("CreateTimerQueue failed!");
+    }
     CreateTimerQueueTimer(&hTimer, hTimerQueue, (WAITORTIMERCALLBACK)TimerRoutine, &arg, 0, milliseconds, 0);
-    WaitForSingleObject(gDoneEvent, INFINITE);
+    int waitResponse = WaitForSingleObject(gDoneEvent, INFINITE);
+    if (waitResponse == WAIT_OBJECT_0) {
+        logging->error("WaitForSingleObject failed!");
+    }
     CloseHandle(gDoneEvent);
     return hTimerQueue;
 }
@@ -86,11 +95,13 @@ void wakeApp() {
 // Only connect if IP, ID, and username exist.
 void reconnectHub() {
     delete hue;
-    string ip = settings->getIPAddress();
-    string id = settings->getLightId();
-    string username = settings->getUsername();
+    const string ip = settings->getIPAddress();
+    const string id = settings->getLightId();
+    const string username = settings->getUsername();
+    logging->info("Connecting to hub, IP: " + ip + ", light: " + id + ", username: " + username);
     if (!ip.empty() && !id.empty() && !username.empty()) {
         hue = new Hue(ip, id, username);
+        hue->turnOn();
     }
 }
 

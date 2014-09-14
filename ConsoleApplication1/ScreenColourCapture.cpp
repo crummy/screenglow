@@ -20,13 +20,20 @@ COLORREF ScreenColourCapture::getScreenColour() {
     int nScreenWidth = GetSystemMetrics(SM_CXSCREEN);
     int nScreenHeight = GetSystemMetrics(SM_CYSCREEN);
     HDC bitmapDC = CreateCompatibleDC(0);
-    HBITMAP hBmp = CreateCompatibleBitmap(GetDC(0), nScreenWidth, nScreenHeight);
+    HDC hDC = GetDC(0);
+    HBITMAP hBmp = CreateCompatibleBitmap(hDC, nScreenWidth, nScreenHeight);
     SelectObject(bitmapDC, hBmp);
-    BitBlt(bitmapDC, 0, 0, nScreenWidth, nScreenHeight, GetDC(0), 0, 0, SRCCOPY);
-    if ((OffscrBmp = CreateCompatibleBitmap(bitmapDC, nScreenWidth, nScreenHeight)) == NULL)
+    BitBlt(bitmapDC, 0, 0, nScreenWidth, nScreenHeight, hDC, 0, 0, SRCCOPY);
+    if ((OffscrBmp = CreateCompatibleBitmap(bitmapDC, nScreenWidth, nScreenHeight)) == NULL) {
+        int error = GetLastError();
+        logging->error("CreateCompatibleBitmap failed! Error: " + to_string(error));
         return 0;
-    if ((OffscrDC = CreateCompatibleDC(bitmapDC)) == NULL)
+    }
+    if ((OffscrDC = CreateCompatibleDC(bitmapDC)) == NULL) {
+        logging->error("CreateCompatibleDC failed!");
         return 0;
+    }
+    DeleteObject(hBmp); // must be deleted before we select another object or we leak..?
     HBITMAP OldBmp = (HBITMAP)SelectObject(OffscrDC, OffscrBmp);
     BitBlt(OffscrDC, 0, 0, nScreenWidth, nScreenHeight, bitmapDC, 0, 0, SRCCOPY);
     if ((lpbi = (LPBITMAPINFO)(new char[sizeof(BITMAPINFOHEADER)+256 * sizeof(RGBQUAD)])) == NULL)
@@ -46,10 +53,12 @@ COLORREF ScreenColourCapture::getScreenColour() {
 
     // Wrap things up
     delete[] lpvBits;
-    DeleteObject(hBmp);
-    ReleaseDC(GetDesktopWindow(), bitmapDC);
-    DeleteDC(OffscrDC);
+    delete[] lpbi;
+    DeleteObject(OldBmp);
     DeleteObject(OffscrBmp);
+    DeleteObject(bitmapDC);
+    ReleaseDC(0, hDC);
+    DeleteDC(OffscrDC);
 
     return averageColour;
 }
