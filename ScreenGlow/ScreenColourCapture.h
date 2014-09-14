@@ -12,6 +12,10 @@ enum ColourAverageMethod {
 
 using namespace std;
 
+// When asked, takes a screenshot and returns the average colour of the screen.
+// TODO: Add alternative methods of capturing the screen (to get fullscreen games)
+// TODO: Add alternative methods of calculating the average colour of the screen
+
 class ScreenColourCapture
 {
 public:

@@ -14,6 +14,11 @@ enum connectionStatus {
     connectionUnknownError
 };
 
+// Communicates with the Hue hub. 
+// Does not validate a connection other than logging errors upon failure, except for the testConnection()
+// class which will return a connectionStatus enum value based on how far through connecting it was
+// able to get.
+
 class Hue
 {
     struct Point {

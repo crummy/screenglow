@@ -4,6 +4,9 @@
 
 using namespace std;
 
+// Loads and saves settings to/from a file, and generates defaults if needed.
+// Plus getters and setters for every method.
+
 class Settings
 {
 public:

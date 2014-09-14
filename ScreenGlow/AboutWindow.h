@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 
+// A dumb window that just appears, shows static content, and closes when you quit.
+
 class AboutWindow
 {
 public:

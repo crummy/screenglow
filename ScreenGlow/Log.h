@@ -5,6 +5,8 @@
 
 using namespace std;
 
+// A really simple logging class.
+
 class Log
 {
 public:

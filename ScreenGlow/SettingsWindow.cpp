@@ -204,7 +204,7 @@ void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
         reconnectHub();
     }
 
-    bool brightnessEnabled = IsDlgButtonChecked(hDlg, IDC_BRIGHTNESSCHECK);
+    bool brightnessEnabled = (IsDlgButtonChecked(hDlg, IDC_BRIGHTNESSCHECK) != 0);
     settings->setBrightnessEnabled(brightnessEnabled);
     int brightnessMaximum = GetWindowInt(hDlg, IDC_MAXBRIGHTNESSTEXT);
     settings->setBrightnessMaximum(brightnessMaximum);
@@ -217,7 +217,7 @@ void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
     int captureInterval = GetWindowInt(hDlg, IDC_CAPTURETEXT);
     settings->setCaptureIntervalMs(captureInterval);
 
-    bool powerOption = IsDlgButtonChecked(hDlg, IDC_POWERSLEEP);
+    bool powerOption = (IsDlgButtonChecked(hDlg, IDC_POWERSLEEP) != 0);
     settings->setPowerOptionEnabled(powerOption);
 
     if (IsDlgButtonChecked(hDlg, IDC_RADIOMEAN)) {

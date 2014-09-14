@@ -10,7 +10,6 @@
 #include "TaskbarIcon.h"
 #include "ScreenColourCapture.h"
 #include "Log.h"
-#include <iostream>
 #include <fstream>
 #include <windows.h>
 
@@ -38,7 +37,7 @@ VOID CALLBACK TimerRoutine(PVOID lpParam, BOOLEAN TimerOrWaitFired)
 
 
 HANDLE setUpWait(int milliseconds) {
-    // set up wait
+    // sets up the screenshot timer
     // largely from http://msdn.microsoft.com/en-us/library/ms687003.aspx
     // returns hTimerQueue for later cleanup
     HANDLE hTimer = NULL;
@@ -64,7 +63,7 @@ HANDLE setUpWait(int milliseconds) {
 void quitApp() {
     // if setting is on, turn off light
     logging->info("App quitting");
-    if (hue) {
+    if (hue && settings->isPowerOptionEnabled()) {
         hue->turnOff();
     }
     int saveSuccess = settings->saveSettings();
@@ -78,14 +77,14 @@ void quitApp() {
 
 void sleepApp() {
     logging->info("App going to sleep");
-    if (hue) {
+    if (hue && settings->isPowerOptionEnabled()) {
         hue->turnOff();
     }
 }
 
 void wakeApp() {
     logging->info("App waking up");
-    if (hue) {
+    if (hue && settings->isPowerOptionEnabled()) {
         hue->turnOn();
     }
 }
