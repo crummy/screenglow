@@ -25,7 +25,7 @@ class Hue
 public:
     Hue(string ip, string lightID, string username);
     connectionStatus testConnection();
-    int changeColourTo(COLORREF colour);
+    int changeColourTo(COLORREF colour, bool brightness, int minBrightness, int maxBrightness);
     string getUsername();
     void turnOn();
     void turnOff();

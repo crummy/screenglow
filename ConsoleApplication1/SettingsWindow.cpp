@@ -79,12 +79,26 @@ INT_PTR CALLBACK SettingsWindow::AppDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam,
             HWND sliderhWnd = (HWND)lParam;
             if (sliderhWnd == GetDlgItem(hDlg, IDC_MINBRIGHTNESSSLIDER)) {
                 setTextFromSliderValue(hDlg, IDC_MINBRIGHTNESSTEXT, IDC_MINBRIGHTNESSSLIDER);
+                int newMinimum = GetWindowInt(hDlg, IDC_MINBRIGHTNESSTEXT);
+                int maximum = GetWindowInt(hDlg, IDC_MAXBRIGHTNESSTEXT);
+                if (maximum < newMinimum) {
+                    HWND maxSliderhWnd = GetDlgItem(hDlg, IDC_MAXBRIGHTNESSSLIDER);
+                    SendMessage(maxSliderhWnd, TBM_SETPOS, (WPARAM)newMinimum, (LPARAM)MAKELONG(newMinimum, 0));
+                    SetWindowString(hDlg, IDC_MAXBRIGHTNESSTEXT, newMinimum);
+                }
             }
             else if (sliderhWnd == GetDlgItem(hDlg, IDC_CAPTURESLIDER)) {
                 setTextFromSliderValue(hDlg, IDC_CAPTURETEXT, IDC_CAPTURESLIDER);
             }
             else if (sliderhWnd == GetDlgItem(hDlg, IDC_MAXBRIGHTNESSSLIDER)) {
                 setTextFromSliderValue(hDlg, IDC_MAXBRIGHTNESSTEXT, IDC_MAXBRIGHTNESSSLIDER);
+                int newMaximum = GetWindowInt(hDlg, IDC_MAXBRIGHTNESSTEXT);
+                int minimum = GetWindowInt(hDlg, IDC_MINBRIGHTNESSTEXT);
+                if (minimum > newMaximum) {
+                    HWND minSliderhWnd = GetDlgItem(hDlg, IDC_MINBRIGHTNESSSLIDER);
+                    SendMessage(minSliderhWnd, TBM_SETPOS, (WPARAM)newMaximum, (LPARAM)MAKELONG(newMaximum, 0));
+                    SetWindowString(hDlg, IDC_MINBRIGHTNESSTEXT, newMaximum);
+                }
             }
             else if (sliderhWnd == GetDlgItem(hDlg, IDC_BUCKETSLIDER)) {
                 setTextFromSliderValue(hDlg, IDC_BUCKETTEXT, IDC_BUCKETSLIDER);
@@ -146,6 +160,23 @@ void SettingsWindow::populateUIFromSettings(HWND hWnd) {
     SendMessage(captureSliderhWnd, TBM_SETPOS, (WPARAM)captureInterval, (LPARAM)MAKELONG(captureInterval, 0));
     SetWindowString(hWnd, IDC_CAPTURETEXT, captureInterval);
 
+    HWND bucketSliderhWnd = GetDlgItem(hWnd, IDC_BUCKETSLIDER);
+    SendMessage(bucketSliderhWnd, TBM_SETRANGE, (WPARAM)0, (LPARAM)MAKELONG(1, 64));
+    int bucketInterval = settings->getColourBucketSize();
+    SendMessage(bucketSliderhWnd, TBM_SETPOS, (WPARAM)bucketInterval, (LPARAM)MAKELONG(bucketInterval, 0));
+    SetWindowString(hWnd, IDC_BUCKETTEXT, bucketInterval);
+
+    int colourMethod = settings->getAverageColourMethod();
+    if (colourMethod == 0) {
+        CheckDlgButton(hWnd, IDC_RADIOMEAN, BST_CHECKED);
+    }
+    else if (colourMethod == 1) {
+        CheckDlgButton(hWnd, IDC_RADIOMODE, BST_CHECKED);
+    }
+    else if (colourMethod == 2) {
+        CheckDlgButton(hWnd, IDC_RADIOMEDIAN, BST_CHECKED);
+    }
+
 }
 
 // Takes values from the settings window and inserts them into the settings object.
@@ -167,13 +198,40 @@ void SettingsWindow::populateSettingsFromUI(HWND hDlg) {
     settings->setUsername(newUsername);
     bool usernameChanged = (newUsername.compare(oldUsername) != 0);
 
+    // if IP, ID or username have changed, it's necessary to reconnect to the hub again
+    // to have the users new changes immediately take place
     if (IPChanged || IDChanged || usernameChanged) {
         reconnectHub();
     }
-    string brightnessMinimum = GetWindowString(hDlg, IDC_MINBRIGHTNESSTEXT);
-    settings->setBrightnessMinimum(atoi(brightnessMinimum.c_str()));
-    string captureInterval = GetWindowString(hDlg, IDC_CAPTURETEXT);
-    settings->setCaptureIntervalMs(atoi(captureInterval.c_str()));
+
+    bool brightnessEnabled = IsDlgButtonChecked(hDlg, IDC_BRIGHTNESSCHECK);
+    settings->setBrightnessEnabled(brightnessEnabled);
+    int brightnessMaximum = GetWindowInt(hDlg, IDC_MAXBRIGHTNESSTEXT);
+    settings->setBrightnessMaximum(brightnessMaximum);
+    int brightnessMinimum = GetWindowInt(hDlg, IDC_MINBRIGHTNESSTEXT);
+    settings->setBrightnessMinimum(brightnessMinimum);
+
+    int bucketSize = GetWindowInt(hDlg, IDC_BUCKETTEXT);
+    settings->setColourBucketSize(bucketSize);
+    
+    int captureInterval = GetWindowInt(hDlg, IDC_CAPTURETEXT);
+    settings->setCaptureIntervalMs(captureInterval);
+
+    bool powerOption = IsDlgButtonChecked(hDlg, IDC_POWERSLEEP);
+    settings->setPowerOptionEnabled(powerOption);
+
+    if (IsDlgButtonChecked(hDlg, IDC_RADIOMEAN)) {
+        settings->setAverageColourMethod(0);
+    }
+    else if (IsDlgButtonChecked(hDlg, IDC_RADIOMODE)) {
+        settings->setAverageColourMethod(1);
+    }
+    else if (IsDlgButtonChecked(hDlg, IDC_RADIOMEDIAN)) {
+        settings->setAverageColourMethod(2);
+    }
+    else {
+        logging->warn("Couldn't figure out which radio button was checked");
+    }
 }
 
 void SettingsWindow::testConnection(HWND hDlg) {

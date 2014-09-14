@@ -104,7 +104,7 @@ connectionStatus Hue::testConnection() {
                 username_regex = regex("\"success\":\\{\"username\":\"(.*)\"\\}");
             }
             catch (const regex_error &e) {
-                logging->error("Tried to register app but couldn't regex username from response");
+                logging->error("Tried to register app but couldn't regex username from response: " + e.code());
                 return connectionUnknownError;
             }
             smatch match;
@@ -157,16 +157,23 @@ void Hue::turnOff() {
 }
 
 // Given a COLORREF, will change light_id to this colour. Returns 0 on success.
-int Hue::changeColourTo(COLORREF colour) {
+int Hue::changeColourTo(COLORREF colour, bool brightnessEnabled, int minBrightness, int maxBrightness) {
     int success = 0;
     Point xy = convertColourToXY(colour);
     int brightness = convertColourToBrightness(colour);
+    brightness = max(minBrightness, min(brightness, maxBrightness)); // smart little clamp function
     stringstream x, y;
     x << xy.x;
     y << xy.y;
     string returned_data;
     const string URL = "http://" + ip + "/api/" + username + "/lights/" + lightID + "/state";
-    const string body = "{ \"xy\": [" + x.str() + "," + y.str() + "] }";
+    string body;
+    if (brightnessEnabled) {
+        body = "{ \"xy\": [" + x.str() + "," + y.str() + "], \"bri\": " + to_string(brightness) + " }";
+    }
+    else {
+        body = "{ \"xy\": [" + x.str() + "," + y.str() + "] }";
+    }
     success = sendMessage(URL, body, returned_data);
     if (returned_data.find("success") == string::npos) {
         success = -1;
@@ -289,7 +296,10 @@ float Hue::crossProduct(Point one, Point two) {
 }
 
 int Hue::convertColourToBrightness(COLORREF colour) {
-    return 0;
+    int red = GetRValue(colour);
+    int green = GetRValue(colour);
+    int blue = GetBValue(colour);
+    return (red + green + blue) / 3;
 }
 
 Hue::~Hue()

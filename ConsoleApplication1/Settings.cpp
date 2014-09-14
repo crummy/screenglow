@@ -128,8 +128,8 @@ string Settings::getUsername() {
     return settings[username];
 }
 
-void Settings::setUsername(string username) {
-    settings[username] = username;
+void Settings::setUsername(string name) {
+    settings[username] = name;
 }
 
 string Settings::getLightId() {

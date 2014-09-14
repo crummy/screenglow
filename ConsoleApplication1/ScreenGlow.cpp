@@ -30,7 +30,7 @@ VOID CALLBACK TimerRoutine(PVOID lpParam, BOOLEAN TimerOrWaitFired)
     } else {
         COLORREF averageColour = screenCapture->getScreenColour();
         if (hue != NULL) {
-            hue->changeColourTo(averageColour);
+            hue->changeColourTo(averageColour, settings->isBrightnessEnabled(), settings->getBrightnessMinimum(), settings->getBrightnessMaximum());
         }
     }
     SetEvent(gDoneEvent);
