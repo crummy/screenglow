@@ -25,7 +25,7 @@ public:
     void setAverageColourMethod(ColourAverageMethod method);
 
 private:
-    COLORREF getMeanColourFromPixels(const BYTE *pixels, const LPBITMAPINFO infos);
+    COLORREF getMeanColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info);
     COLORREF getModeColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info);
     COLORREF getMedianColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info);
     ColourAverageMethod selectedMethod;
