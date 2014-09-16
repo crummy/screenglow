@@ -23,11 +23,12 @@ public:
     ~ScreenColourCapture();
     COLORREF getScreenColour();
     void setAverageColourMethod(int method);
-
+    void setModeBucketSize(int bucketSize);
 private:
     COLORREF getMeanColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info);
     COLORREF getModeColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info);
     COLORREF getMedianColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info);
     ColourAverageMethod selectedMethod;
+    int bucketSize;
 };
 

@@ -1,11 +1,12 @@
 #include "stdafx.h"
 #include "ScreenColourCapture.h"
 #include <algorithm>
-
+#include <map>
 
 ScreenColourCapture::ScreenColourCapture()
 {
     selectedMethod = MEDIANCOLOUR;
+    bucketSize = 8;
 }
 
 
@@ -58,7 +59,7 @@ COLORREF ScreenColourCapture::getScreenColour() {
         averageColour = getMedianColourFromPixels((BYTE *)lpvBits, lpbi);
     }
     else if (selectedMethod == MODECOLOUR) {
-        averageColour = 0; // TODO
+        averageColour = getModeColourFromPixels((BYTE *)lpvBits, lpbi); // TODO
     }
     else {
         logging->warn("Could not figure out which colour method to use!");
@@ -81,23 +82,26 @@ void ScreenColourCapture::setAverageColourMethod(int method) {
     this->selectedMethod = (ColourAverageMethod)method;
 }
 
+void ScreenColourCapture::setModeBucketSize(int bucketSize) {
+    this->bucketSize = bucketSize;
+}
+
 COLORREF ScreenColourCapture::getMeanColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info) {
 #pragma warning(suppress: 28159)
     DWORD startTime = GetTickCount();
-    int width = info->bmiHeader.biWidth;
-    int height = info->bmiHeader.biHeight;
+    int totalPixels = info->bmiHeader.biWidth * info->bmiHeader.biHeight;
     float totalRed = 0;
     float totalBlue = 0;
     float totalGreen = 0;
-    for (int pixel = 0; pixel < height * width; pixel += 1) {
+    for (int pixel = 0; pixel < totalPixels; pixel += 1) {
         int pixelIndex = pixel * (info->bmiHeader.biBitCount / 8);
         totalRed += pixels[pixelIndex + 2];
         totalGreen += pixels[pixelIndex + 1];
         totalBlue += pixels[pixelIndex + 0];
     }
-    float averageRed = totalRed / (height * width);
-    float averageGreen = totalGreen / (height * width);
-    float averageBlue = totalBlue / (height * width);
+    float averageRed = totalRed / totalPixels;
+    float averageGreen = totalGreen / totalPixels;
+    float averageBlue = totalBlue / totalPixels;
 #pragma warning(suppress: 28159)
     logging->info("found mean colour in " + to_string(GetTickCount() - startTime) + "ms");
     return RGB((int)averageRed, (int)averageGreen, (int)averageBlue);
@@ -114,18 +118,42 @@ struct pixelCompare {
 COLORREF ScreenColourCapture::getMedianColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info) {
 #pragma warning(suppress: 28159)
     DWORD startTime = GetTickCount();
-    int size = info->bmiHeader.biWidth * info->bmiHeader.biHeight;
+    int totalPixels = info->bmiHeader.biWidth * info->bmiHeader.biHeight;
     int pixelSize = info->bmiHeader.biBitCount / 8;
     vector<const BYTE*> pixelPointers;
-    for (int pixel = 0; pixel < size; pixel++) {
+    for (int pixel = 0; pixel < totalPixels; pixel++) {
         pixelPointers.push_back(&pixels[pixel * pixelSize]);
     }
-    nth_element(pixelPointers.begin(), pixelPointers.begin() + size / 2, pixelPointers.end(), pixelCompare());
-    const BYTE* median = pixelPointers[size / 2];
+    nth_element(pixelPointers.begin(), pixelPointers.begin() + totalPixels / 2, pixelPointers.end(), pixelCompare());
+    const BYTE* median = pixelPointers[totalPixels / 2];
     int red = (int)(median[2]);
     int green = (int)(median[1]);
     int blue = (int)(median[0]);
 #pragma warning(suppress: 28159)
     logging->info("found median colour in " + to_string(GetTickCount() - startTime) + "ms");
     return RGB(red, green, blue);
+}
+
+COLORREF ScreenColourCapture::getModeColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info) {
+#pragma warning(suppress: 28159)
+    DWORD startTime = GetTickCount();
+    int totalPixels = info->bmiHeader.biWidth * info->bmiHeader.biHeight;
+    int pixelSize = info->bmiHeader.biBitCount / 8;
+    map<COLORREF, int> colourBuckets;
+    for (int pixel = 0; pixel < totalPixels; pixel++) {
+        int pixelIndex = pixel * pixelSize;
+        COLORREF colour = RGB(pixels[pixelIndex + 2], pixels[pixelIndex + 1], pixels[pixelIndex + 0]);
+        colourBuckets[colour]++;
+    }
+    COLORREF mostCommonColour;
+    int mostCommonColourCount = 0;
+    for (map<COLORREF, int>::iterator it = colourBuckets.begin(); it != colourBuckets.end(); it++) {
+        if (it->second > mostCommonColourCount) {
+            mostCommonColourCount = it->second;
+            mostCommonColour = it->first;
+        }
+    }
+#pragma warning(suppress: 28159)
+    logging->info("found mode colour in " + to_string(GetTickCount() - startTime) + "ms");
+    return mostCommonColour;
 }
