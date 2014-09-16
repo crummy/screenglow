@@ -57,6 +57,12 @@ COLORREF ScreenColourCapture::getScreenColour() {
     else if (selectedMethod == MEDIANCOLOUR) {
         averageColour = getMedianColourFromPixels((BYTE *)lpvBits, lpbi);
     }
+    else if (selectedMethod == MODECOLOUR) {
+        averageColour = 0;
+    }
+    else {
+        logging->warn("Could not figure out which colour method to use!");
+    }
 
     // Wrap things up
     delete[] lpvBits;
@@ -70,11 +76,12 @@ COLORREF ScreenColourCapture::getScreenColour() {
     return averageColour;
 }
 
-void ScreenColourCapture::setAverageColourMethod(ColourAverageMethod method) {
-    this->selectedMethod = method;
+void ScreenColourCapture::setAverageColourMethod(int method) {
+    this->selectedMethod = (ColourAverageMethod)method;
 }
 
 COLORREF ScreenColourCapture::getMeanColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info) {
+    DWORD startTime = GetTickCount();
     int width = info->bmiHeader.biWidth;
     int height = info->bmiHeader.biHeight;
     float totalRed = 0;
@@ -89,11 +96,12 @@ COLORREF ScreenColourCapture::getMeanColourFromPixels(const BYTE *pixels, const 
     float averageRed = totalRed / (height * width);
     float averageGreen = totalGreen / (height * width);
     float averageBlue = totalBlue / (height * width);
+    logging->info("found mean colour in " + to_string(GetTickCount() - startTime) + "ms");
     return RGB((int)averageRed, (int)averageGreen, (int)averageBlue);
 }
 
 // returns true if a < b, where "<" is "less bright".
-// useful for sort()
+// useful for sort() or nth_element()
 struct pixelCompare {
     inline bool operator() (const BYTE *a, const BYTE *b) {
         return (a[0] + a[1] + a[2]) < (b[0] + b[1] + b[2]);
@@ -105,13 +113,10 @@ COLORREF ScreenColourCapture::getMedianColourFromPixels(const BYTE *pixels, cons
     int size = info->bmiHeader.biWidth * info->bmiHeader.biHeight;
     int pixelSize = info->bmiHeader.biBitCount / 8;
     vector<const BYTE*> pixelPointers;
-    logging->info("Prep time: " + to_string(GetTickCount() - startTime) + "ms");
     for (int pixel = 0; pixel < size; pixel++) {
-        pixelPointers.push_back(&pixels[pixel]);
+        pixelPointers.push_back(&pixels[pixel * pixelSize]);
     }
-    logging->info("Created vector pixelPointers: " + to_string(GetTickCount() - startTime) + "ms");
-    sort(pixelPointers.begin(), pixelPointers.end(), pixelCompare());
-    logging->info("Sort vector: " + to_string(GetTickCount() - startTime) + "ms");
+    nth_element(pixelPointers.begin(), pixelPointers.begin() + size / 2, pixelPointers.end(), pixelCompare());
     const BYTE* median = pixelPointers[size / 2];
     int red = (int)(median[2]);
     int green = (int)(median[1]);

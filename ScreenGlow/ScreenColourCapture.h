@@ -22,7 +22,7 @@ public:
     ScreenColourCapture();
     ~ScreenColourCapture();
     COLORREF getScreenColour();
-    void setAverageColourMethod(ColourAverageMethod method);
+    void setAverageColourMethod(int method);
 
 private:
     COLORREF getMeanColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info);

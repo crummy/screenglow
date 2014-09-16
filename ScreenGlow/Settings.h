@@ -11,7 +11,6 @@ class Settings
 {
 public:
     Settings();
-    Settings(string filename);
     ~Settings();
     int saveSettings();
     int getAverageColourMethod();

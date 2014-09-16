@@ -118,6 +118,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // set up globals. sorry for globals.
     settings = new Settings();
     screenCapture = new ScreenColourCapture();
+    screenCapture->setAverageColourMethod(settings->getAverageColourMethod());
     hInst = hInstance;
     logging = new Log("ScreenGlow_log.txt", true, true, true, true);
 
