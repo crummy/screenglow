@@ -133,7 +133,7 @@ int WINAPI WinMain(
 
     reconnectHub();
 
-    HANDLE timerQueue = setUpWait(1000);
+    HANDLE timerQueue = setUpWait(settings->getCaptureIntervalMs());
 
     TaskbarIcon *taskbarIcon = new TaskbarIcon(openSettingsWindow, openAboutWindow, quitApp, sleepApp, wakeApp);
     taskbarIcon->show(hInstance);

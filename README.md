@@ -10,11 +10,12 @@ Have your Philips Hue lights match your monitor's colour.
 * Manually enter or automatically acquire IP address
 * App will regularly take the average colour of the screen and set chosen light to this colour
 * Light will turn on/off when computer sleeps, wakes, or powers down
+* Optionally use brightness information from colour, with adjustable min/max values
 
-## Planned
+## Limitations
 
-* Different algorithms to choose "average" colour of screen
-* Incorporate brightness information from screen into final colour
+* Screen capture method only captures primary monitor, and not full screen games or movies
+* Changing capture interval or colour capture method requires restarting the program
 
 ## License
 
