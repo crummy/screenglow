@@ -46,15 +46,20 @@ HANDLE setUpWait(int milliseconds) {
     gDoneEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (gDoneEvent == NULL) {
         logging->error("CreateEvent failed!");
+        return NULL;
     }
     hTimerQueue = CreateTimerQueue();
     if (hTimerQueue == NULL) {
         logging->error("CreateTimerQueue failed!");
+        CloseHandle(gDoneEvent);
+        return NULL;
     }
     CreateTimerQueueTimer(&hTimer, hTimerQueue, (WAITORTIMERCALLBACK)TimerRoutine, &arg, 0, milliseconds, 0);
     int waitResponse = WaitForSingleObject(gDoneEvent, INFINITE);
     if (waitResponse == WAIT_OBJECT_0) {
         logging->error("WaitForSingleObject failed!");
+        CloseHandle(gDoneEvent);
+        return NULL;
     }
     CloseHandle(gDoneEvent);
     return hTimerQueue;
@@ -114,7 +119,11 @@ void openAboutWindow() {
     aboutWindow->show(hInst);
 }
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI WinMain(
+    _In_ HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPSTR lpCmdLine,
+    _In_ int nCmdShow) {
     // set up globals. sorry for globals.
     settings = new Settings();
     screenCapture = new ScreenColourCapture();
@@ -138,6 +147,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (hue) {
         delete hue;
     }
-    DeleteTimerQueue(timerQueue);
+    BOOL res = DeleteTimerQueue(timerQueue);
     return (int)msg.wParam;
 }

@@ -58,10 +58,11 @@ COLORREF ScreenColourCapture::getScreenColour() {
         averageColour = getMedianColourFromPixels((BYTE *)lpvBits, lpbi);
     }
     else if (selectedMethod == MODECOLOUR) {
-        averageColour = 0;
+        averageColour = 0; // TODO
     }
     else {
         logging->warn("Could not figure out which colour method to use!");
+        averageColour = 0;
     }
 
     // Wrap things up
@@ -81,6 +82,7 @@ void ScreenColourCapture::setAverageColourMethod(int method) {
 }
 
 COLORREF ScreenColourCapture::getMeanColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info) {
+#pragma warning(suppress: 28159)
     DWORD startTime = GetTickCount();
     int width = info->bmiHeader.biWidth;
     int height = info->bmiHeader.biHeight;
@@ -96,6 +98,7 @@ COLORREF ScreenColourCapture::getMeanColourFromPixels(const BYTE *pixels, const 
     float averageRed = totalRed / (height * width);
     float averageGreen = totalGreen / (height * width);
     float averageBlue = totalBlue / (height * width);
+#pragma warning(suppress: 28159)
     logging->info("found mean colour in " + to_string(GetTickCount() - startTime) + "ms");
     return RGB((int)averageRed, (int)averageGreen, (int)averageBlue);
 }
@@ -109,6 +112,7 @@ struct pixelCompare {
 };
 
 COLORREF ScreenColourCapture::getMedianColourFromPixels(const BYTE *pixels, const LPBITMAPINFO info) {
+#pragma warning(suppress: 28159)
     DWORD startTime = GetTickCount();
     int size = info->bmiHeader.biWidth * info->bmiHeader.biHeight;
     int pixelSize = info->bmiHeader.biBitCount / 8;
@@ -121,6 +125,7 @@ COLORREF ScreenColourCapture::getMedianColourFromPixels(const BYTE *pixels, cons
     int red = (int)(median[2]);
     int green = (int)(median[1]);
     int blue = (int)(median[0]);
+#pragma warning(suppress: 28159)
     logging->info("found median colour in " + to_string(GetTickCount() - startTime) + "ms");
     return RGB(red, green, blue);
 }

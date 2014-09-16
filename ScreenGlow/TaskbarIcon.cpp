@@ -37,7 +37,7 @@ void TaskbarIcon::show(HINSTANCE hInstance) {
         LR_DEFAULTCOLOR);
     niData.hWnd = hWnd;
     niData.uCallbackMessage = WM_RIGHTCLICKMENUMSG;
-    lstrcpyn(niData.szTip, _T("ScreenGlow is now running"), sizeof(niData.szTip) / sizeof(TCHAR));
+    LPTSTR res = lstrcpyn(niData.szTip, _T("ScreenGlow is now running"), sizeof(niData.szTip) / sizeof(TCHAR)); // TODO: Use StringCchCopy
     Shell_NotifyIcon(NIM_ADD, &niData);
     if (niData.hIcon && DestroyIcon(niData.hIcon)) {
         niData.hIcon = NULL;
