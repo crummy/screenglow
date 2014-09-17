@@ -59,7 +59,7 @@ COLORREF ScreenColourCapture::getScreenColour() {
         averageColour = getMedianColourFromPixels((BYTE *)lpvBits, lpbi);
     }
     else if (selectedMethod == MODECOLOUR) {
-        averageColour = getModeColourFromPixels((BYTE *)lpvBits, lpbi); // TODO
+        averageColour = getModeColourFromPixels((BYTE *)lpvBits, lpbi);
     }
     else {
         logging->warn("Could not figure out which colour method to use!");
@@ -142,7 +142,10 @@ COLORREF ScreenColourCapture::getModeColourFromPixels(const BYTE *pixels, const 
     map<COLORREF, int> colourBuckets;
     for (int pixel = 0; pixel < totalPixels; pixel++) {
         int pixelIndex = pixel * pixelSize;
-        COLORREF colour = RGB(pixels[pixelIndex + 2], pixels[pixelIndex + 1], pixels[pixelIndex + 0]);
+        COLORREF colour = RGB(
+            (pixels[pixelIndex + 2]/bucketSize)*bucketSize,
+            (pixels[pixelIndex + 1]/bucketSize)*bucketSize,
+            (pixels[pixelIndex + 0]/bucketSize)*bucketSize);
         colourBuckets[colour]++;
     }
     COLORREF mostCommonColour;
